@@ -1,0 +1,74 @@
+[0/1] cd /home/omen/esp/esp-idf/components/esptool_py && /usr/bin/cmake -D IDF_PATH=/home/omen/esp/esp-idf -D "SERIAL_TOOL=/home/omen/.espressif/python_env/idf5.2_py3.10_env/bin/python;-m;esp_idf_monitor" -D "SERIAL_TOOL_ARGS=--target;esp32;--revision;0;/home/omen/esp/smart_watch/build/smart_watch.elf" -D WORKING_DIRECTORY=/home/omen/esp/smart_watch/build -P run_serial_tool.cmake
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 271414342, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:7524
+load:0x40078000,len:16528
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:4312
+entry 0x4008065c
+I (32) boot: ESP-IDF v5.2.3 2nd stage bootloader
+I (32) boot: compile time Mar  3 2026 13:29:24
+I (32) boot: Multicore bootloader
+I (36) boot: chip revision: v3.1
+I (40) qio_mode: Enabling default flash chip QIO
+I (45) boot.esp32: SPI Speed      : 80MHz
+I (50) boot.esp32: SPI Mode       : QIO
+I (54) boot.esp32: SPI Flash Size : 8MB
+I (59) boot: Enabling RNG early entropy source...
+I (64) boot: Partition Table:
+I (68) boot: ## Label            Usage          Type ST Offset   Length
+I (75) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (83) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (90) boot:  2 factory          factory app      00 00 00010000 00100000
+I (98) boot: End of partition table
+I (102) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=0e278h ( 57976) map
+I (125) esp_image: segment 1: paddr=0001e2a0 vaddr=3ffb0000 size=01d78h (  7544) load
+I (128) esp_image: segment 2: paddr=00020020 vaddr=400d0020 size=1a30ch (107276) map
+I (159) esp_image: segment 3: paddr=0003a334 vaddr=3ffb1d78 size=00634h (  1588) load
+I (159) esp_image: segment 4: paddr=0003a970 vaddr=40080000 size=11dcch ( 73164) load
+I (195) boot: Loaded app from partition at offset 0x10000
+I (196) boot: Disabling RNG early entropy source...
+I (207) cpu_start: Multicore app
+I (208) quad_psram: This chip is ESP32-PICO-V3-02
+I (208) esp_psram: Found 2MB PSRAM device
+I (210) esp_psram: Speed: 40MHz
+I (214) esp_psram: PSRAM initialized, cache is in low/high (2-core) mode.
+I (652) esp_psram: SPI SRAM memory test OK
+I (660) cpu_start: Pro cpu start user code
+I (660) cpu_start: cpu freq: 240000000 Hz
+I (660) cpu_start: Application information:
+I (663) cpu_start: Project name:     smart_watch
+I (668) cpu_start: App version:      1
+I (672) cpu_start: Compile time:     Mar  3 2026 13:29:20
+I (678) cpu_start: ELF file SHA256:  c16818a49...
+I (684) cpu_start: ESP-IDF:          v5.2.3
+I (689) cpu_start: Min chip rev:     v0.0
+I (693) cpu_start: Max chip rev:     v3.99 
+I (698) cpu_start: Chip rev:         v3.1
+I (703) heap_init: Initializing. RAM available for dynamic allocation:
+I (710) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM
+I (716) heap_init: At 3FFB2D28 len 0002D2D8 (180 KiB): DRAM
+I (722) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM
+I (729) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM
+I (735) heap_init: At 40091DCC len 0000E234 (56 KiB): IRAM
+I (742) esp_psram: Adding pool of 2048K of PSRAM memory to heap allocator
+I (749) spi_flash: detected chip: generic
+I (754) spi_flash: flash io: qio
+W (757) i2c: This driver is an old driver, please migrate your application code to adapt `driver/i2c_master.h`
+I (768) main_task: Started on CPU0
+I (778) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+I (778) main_task: Calling app_main()
+I (778) gpio: GPIO[4]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 
+I (788) M5_APP: Power hold engaged.
+I (798) FLUID_TASK: Initialize SPI bus...
+I (798) gpio: GPIO[14]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 
+I (808) gpio: GPIO[12]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 
+I (938) gpio: GPIO[27]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 
+I (938) FLUID_TASK: Initializing I2C for MPU6886...
+I (938) FLUID_TASK: Allocating fluid buffers...
+I (938) FLUID_TASK: Starting fluid loop...

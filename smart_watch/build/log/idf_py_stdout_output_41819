@@ -1,0 +1,63 @@
+[1/5] cd /home/omen/esp/smart_watch/build/esp-idf/esptool_py && /home/omen/.espressif/python_env/idf5.2_py3.10_env/bin/python /home/omen/esp/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /home/omen/esp/smart_watch/build/partition_table/partition-table.bin /home/omen/esp/smart_watch/build/smart_watch.bin
+smart_watch.bin binary size 0x96840 bytes. Smallest app partition is 0x100000 bytes. 0x697c0 bytes (41%) free.
+[2/5] Performing build step for 'bootloader'
+[1/1] cd /home/omen/esp/smart_watch/build/bootloader/esp-idf/esptool_py && /home/omen/.espressif/python_env/idf5.2_py3.10_env/bin/python /home/omen/esp/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x1000 /home/omen/esp/smart_watch/build/bootloader/bootloader.bin
+Bootloader binary size 0x6f30 bytes. 0xd0 bytes (1%) free.
+[2/3] cd /home/omen/esp/esp-idf/components/esptool_py && /usr/bin/cmake -D IDF_PATH=/home/omen/esp/esp-idf -D "SERIAL_TOOL=/home/omen/.espressif/python_env/idf5.2_py3.10_env/bin/python;;/home/omen/esp/esp-idf/components/esptool_py/esptool/esptool.py;--chip;esp32" -D "SERIAL_TOOL_ARGS=--before=default_reset;--after=hard_reset;write_flash;@flash_args" -D WORKING_DIRECTORY=/home/omen/esp/smart_watch/build -P /home/omen/esp/esp-idf/components/esptool_py/run_serial_tool.cmake
+esptool.py --chip esp32 -p /dev/ttyACM0 -b 460800 --before=default_reset --after=hard_reset write_flash --flash_mode dio --flash_freq 80m --flash_size 8MB 0x1000 bootloader/bootloader.bin 0x10000 smart_watch.bin 0x8000 partition_table/partition-table.bin
+esptool.py v4.8.1
+Serial port /dev/ttyACM0
+Connecting.....
+Chip is ESP32-PICO-V3-02 (revision v3.1)
+Features: WiFi, BT, Dual Core, 240MHz, Embedded Flash, Embedded PSRAM, VRef calibration in efuse, Coding Scheme None
+Crystal is 40MHz
+MAC: c0:cd:d6:13:d8:d4
+Uploading stub...
+Running stub...
+Stub running...
+Changing baud rate to 460800
+Changed.
+Configuring flash size...
+Flash will be erased from 0x00001000 to 0x00007fff...
+Flash will be erased from 0x00010000 to 0x000a6fff...
+Flash will be erased from 0x00008000 to 0x00008fff...
+SHA digest in image updated
+Compressed 28464 bytes to 17331...
+Writing at 0x00001000... (50 %)
+Writing at 0x00007a4a... (100 %)
+Wrote 28464 bytes (17331 compressed) at 0x00001000 in 0.8 seconds (effective 276.8 kbit/s)...
+Hash of data verified.
+Compressed 616512 bytes to 385392...
+Writing at 0x00010000... (4 %)
+Writing at 0x0001d541... (8 %)
+Writing at 0x000236a4... (12 %)
+Writing at 0x00028ba9... (16 %)
+Writing at 0x00032887... (20 %)
+Writing at 0x00037af5... (25 %)
+Writing at 0x0003dd69... (29 %)
+Writing at 0x000431ea... (33 %)
+Writing at 0x00048bad... (37 %)
+Writing at 0x0004e351... (41 %)
+Writing at 0x000537b9... (45 %)
+Writing at 0x00059151... (50 %)
+Writing at 0x0005e532... (54 %)
+Writing at 0x00063d82... (58 %)
+Writing at 0x000698d2... (62 %)
+Writing at 0x0006f9b6... (66 %)
+Writing at 0x00075df5... (70 %)
+Writing at 0x0007c9da... (75 %)
+Writing at 0x0008788c... (79 %)
+Writing at 0x0008d339... (83 %)
+Writing at 0x00092adc... (87 %)
+Writing at 0x00098003... (91 %)
+Writing at 0x0009da79... (95 %)
+Writing at 0x000a3835... (100 %)
+Wrote 616512 bytes (385392 compressed) at 0x00010000 in 8.6 seconds (effective 571.5 kbit/s)...
+Hash of data verified.
+Compressed 3072 bytes to 103...
+Writing at 0x00008000... (100 %)
+Wrote 3072 bytes (103 compressed) at 0x00008000 in 0.1 seconds (effective 429.8 kbit/s)...
+Hash of data verified.
+
+Leaving...
+Hard resetting via RTS pin...

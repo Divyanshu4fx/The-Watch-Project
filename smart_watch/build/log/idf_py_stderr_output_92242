@@ -1,0 +1,34 @@
+[0;33m--- esp-idf-monitor 1.6.2 on /dev/ttyACM0 115200[0m
+[0;33m--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H[0m
+[0;33m--- 0x40080400: _init at ??:?
+[0m
+[0;33m--- 0x40086176: esp_crosscore_isr at /home/omen/esp/esp-idf/components/esp_system/crosscore_int.c:103
+--- 0x40084509: _xt_lowint1 at /home/omen/esp/esp-idf/components/xtensa/xtensa_vectors.S:1240
+--- 0x400635d1: __muldf3 in ROM
+--- 0x400dd031: __kernel_cos at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/newlib/newlib/libm/math/k_cos.c:81
+--- 0x400dcf93: sin at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/newlib/newlib/libm/math/s_sin.c:115
+--- 0x400d626e: display_task at /home/omen/esp/smart_watch/main/smart_watch.c:145
+[0m
+[0;33m--- 0x40086176: esp_crosscore_isr at /home/omen/esp/esp-idf/components/esp_system/crosscore_int.c:103
+--- 0x40084509: _xt_lowint1 at /home/omen/esp/esp-idf/components/xtensa/xtensa_vectors.S:1240
+--- 0x400dd2c2: __ieee754_rem_pio2 at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/newlib/newlib/libm/math/e_rem_pio2.c:101
+--- 0x400dceda: cos at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/newlib/newlib/libm/math/s_cos.c:71
+--- 0x400d6279: display_task at /home/omen/esp/smart_watch/main/smart_watch.c:148
+[0m
+[0;33m--- 0x40086176: esp_crosscore_isr at /home/omen/esp/esp-idf/components/esp_system/crosscore_int.c:103
+--- 0x40084509: _xt_lowint1 at /home/omen/esp/esp-idf/components/xtensa/xtensa_vectors.S:1240
+--- 0x400d6269: display_task at /home/omen/esp/smart_watch/main/smart_watch.c:143 (discriminator 1)
+[0m
+[0;33m--- 0x40086176: esp_crosscore_isr at /home/omen/esp/esp-idf/components/esp_system/crosscore_int.c:103
+--- 0x40084509: _xt_lowint1 at /home/omen/esp/esp-idf/components/xtensa/xtensa_vectors.S:1240
+--- 0x40087323: memset at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/newlib/newlib/libc/machine/xtensa/memset.S:150
+--- 0x400d61ca: display_task at /home/omen/esp/smart_watch/main/smart_watch.c:140
+[0m
+[0;33m--- 0x40086176: esp_crosscore_isr at /home/omen/esp/esp-idf/components/esp_system/crosscore_int.c:103
+--- 0x40084509: _xt_lowint1 at /home/omen/esp/esp-idf/components/xtensa/xtensa_vectors.S:1240
+--- 0x400635cb: __muldf3 in ROM
+--- 0x400dd23d: __kernel_sin at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/newlib/newlib/libm/math/k_sin.c:76
+--- 0x400dcf8a: sin at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/newlib/newlib/libm/math/s_sin.c:113
+--- 0x400d626e: display_task at /home/omen/esp/smart_watch/main/smart_watch.c:145
+[0m
+[0m

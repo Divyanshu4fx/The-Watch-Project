@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/home/omen/esp/smart_watch/build/CMakeFiles/bootloader
+/home/omen/esp/smart_watch/build/CMakeFiles/bootloader.rule
+/home/omen/esp/smart_watch/build/CMakeFiles/bootloader-complete.rule
+/home/omen/esp/smart_watch/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/home/omen/esp/smart_watch/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/home/omen/esp/smart_watch/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/home/omen/esp/smart_watch/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/home/omen/esp/smart_watch/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/home/omen/esp/smart_watch/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/home/omen/esp/smart_watch/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

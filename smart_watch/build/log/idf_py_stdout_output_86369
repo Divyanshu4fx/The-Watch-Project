@@ -1,0 +1,103 @@
+�����ST Offset   Length[0m
+[0;32mI (75) boot:  0 nvs             ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 271414342, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:7524
+load:0x40078000,len:16528
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:4312
+entry 0x4008065c
+[0;32mI (32) boot: ESP-IDF v5.2.3 2nd stage bootloader[0m
+[0;32mI (32) boot: compile time Mar  3 2026 13:27:07[0m
+[0;32mI (32) boot: Multicore bootloader[0m
+[0;32mI (36) boot: chip revision: v3.1[0m
+[0;32mI (40) qio_mode: Enabling default flash chip QIO[0m
+[0;32mI (45) boot.esp32: SPI Speed      : 80MHz[0m
+[0;32mI (50) boot.esp32: SPI Mode       : QIO[0m
+[0;32mI (54) boot.esp32: SPI Flash Size : 8MB[0m
+[0;32mI (59) boot: Enabling RNG early entropy source...[0m
+[0;32mI (64) boot: Partition Table:[0m
+[0;32mI (68) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (75) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (83) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (90) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (98) boot: End of partition table[0m
+[0;32mI (102) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=1099ch ( 67996) map[0m
+[0;32mI (128) esp_image: segment 1: paddr=000209c4 vaddr=3ffb0000 size=0243ch (  9276) load[0m
+[0;32mI (131) esp_image: segment 2: paddr=00022e08 vaddr=40080000 size=0d210h ( 53776) load[0m
+[0;32mI (150) esp_image: segment 3: paddr=00030020 vaddr=400d0020 size=1d6c0h (120512) map[0m
+[0;32mI (181) esp_image: segment 4: paddr=0004d6e8 vaddr=4008d210 size=055a8h ( 21928) load[0m
+[0;32mI (197) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (197) boot: Disabling RNG early entropy source...[0m
+[0;32mI (209) cpu_start: Multicore app[0m
+[0;32mI (209) quad_psram: This chip is ESP32-PICO-V3-02[0m
+[0;32mI (210) esp_psram: Found 2MB PSRAM device[0m
+[0;32mI (212) esp_psram: Speed: 40MHz[0m
+[0;32mI (215) esp_psram: PSRAM initialized, cache is in low/high (2-core) mode.[0m
+[0;32mI (684) esp_psram: SPI SRAM memory test OK[0m
+[0;32mI (692) cpu_start: Pro cpu start user code[0m
+[0;32mI (692) cpu_start: cpu freq: 240000000 Hz[0m
+[0;32mI (692) cpu_start: Application information:[0m
+[0;32mI (695) cpu_start: Project name:     smart_watch[0m
+[0;32mI (700) cpu_start: App version:      1[0m
+[0;32mI (705) cpu_start: Compile time:     Mar  3 2026 13:27:00[0m
+[0;32mI (711) cpu_start: ELF file SHA256:  d12a39fba...[0m
+[0;32mI (716) cpu_start: ESP-IDF:          v5.2.3[0m
+[0;32mI (721) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (726) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (731) cpu_start: Chip rev:         v3.1[0m
+[0;32mI (736) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (743) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (749) heap_init: At 3FFB2DB0 len 0002D250 (180 KiB): DRAM[0m
+[0;32mI (755) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (761) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (768) heap_init: At 400927B8 len 0000D848 (54 KiB): IRAM[0m
+[0;32mI (774) esp_psram: Adding pool of 2048K of PSRAM memory to heap allocator[0m
+[0;32mI (782) spi_flash: detected chip: generic[0m
+[0;32mI (786) spi_flash: flash io: qio[0m
+[0;32mI (790) main_task: Started on CPU0[0m
+[0;32mI (800) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations[0m
+[0;32mI (800) main_task: Calling app_main()[0m
+[0;32mI (800) gpio: GPIO[4]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 [0m
+[0;32mI (810) M5_APP: Power hold engaged.[0m
+[0;32mI (820) DISPLAY_TASK: Initialize SPI bus...[0m
+[0;32mI (820) DISPLAY_TASK: Installing panel IO...[0m
+[0;32mI (830) gpio: GPIO[14]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (830) DISPLAY_TASK: Installing ST7789 panel driver...[0m
+[0;32mI (840) gpio: GPIO[12]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (970) DISPLAY_TASK: Turning on backlight...[0m
+[0;32mI (970) gpio: GPIO[27]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 [0m
+[0;31mE (5960) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:[0m
+[0;31mE (5960) task_wdt:  - IDLE0 (CPU 0)[0m
+[0;31mE (5960) task_wdt: Tasks currently running:[0m
+[0;31mE (5960) task_wdt: CPU 0: DisplayTask[0m
+[0;31mE (5960) task_wdt: CPU 1: IDLE1[0m
+[0;31mE (5960) task_wdt: Print CPU 0 (current core) backtrace[0m
+
+
+Backtrace: 0x400DF407:0x3FFB0F30 0x400DF7E4:0x3FFB0F50 0x400857D5:0x3FFB0F80 0x40063638:0x3FFBF9C0 0x400E0ACD:0x3FFBF9E0 0x400E09BF:0x3FFBFA10 0x400D97AD:0x3FFBFA40 0x4008B021:0x3FFC1D80
+
+[0;31mE (10960) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:[0m
+[0;31mE (10960) task_wdt:  - IDLE0 (CPU 0)[0m
+[0;31mE (10960) task_wdt: Tasks currently running:[0m
+[0;31mE (10960) task_wdt: CPU 0: DisplayTask[0m
+[0;31mE (10960) task_wdt: CPU 1: IDLE1[0m
+[0;31mE (10960) task_wdt: Print CPU 0 (current core) backtrace[0m
+
+
+Backtrace: 0x400DF407:0x3FFB0F30 0x400DF7E4:0x3FFB0F50 0x400857D5:0x3FFB0F80 0x400635B2:0x3FFBF9C0 0x400E0ACD:0x3FFBF9E0 0x400E09BF:0x3FFBFA10 0x400D9711:0x3FFBFA40 0x4008B021:0x3FFC1D80
+
+[0;31mE (15960) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:[0m
+[0;31mE (15960) task_wdt:  - IDLE0 (CPU 0)[0m
+[0;31mE (15960) task_wdt: Tasks currently running:[0m
+[0;31mE (15960) task_wdt: CPU 0: DisplayTask[0m
+[0;31mE (15960) task_wdt: CPU 1: IDLE1[0m
+[0;31mE (15960) task_wdt: Print CPU 0 (current core) backtrace[0m
+
+
+Backtrace: 0x400DF407:0x3FFB0F30 0x400DF7E4:0x3FFB0F50 0x400857D5:0x3FFB0F80 0x400635A6:0x3FFBF980 0x400E0ECD:0x3FFBF9A0 0x400E09A6:0x3FFBFA10 0x400D978C:0x3FFBFA40 0x4008B021:0x3FFC1D80
+
