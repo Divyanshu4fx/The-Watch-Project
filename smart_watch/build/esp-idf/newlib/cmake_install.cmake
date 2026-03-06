@@ -39,6 +39,6 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/omen/esp/smart_watch/build/esp-idf/newlib/port/cmake_install.cmake")
+  include("/home/omen/The Watch Project/smart_watch/build/esp-idf/newlib/port/cmake_install.cmake")
 endif()
 

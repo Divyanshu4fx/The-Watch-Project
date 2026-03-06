@@ -1,5 +1,0 @@
-[1/4] cd /home/omen/esp/smart_watch/build/esp-idf/esptool_py && /home/omen/.espressif/python_env/idf5.2_py3.10_env/bin/python /home/omen/esp/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /home/omen/esp/smart_watch/build/partition_table/partition-table.bin /home/omen/esp/smart_watch/build/smart_watch.bin
-smart_watch.bin binary size 0x3c5e0 bytes. Smallest app partition is 0x100000 bytes. 0xc3a20 bytes (76%) free.
-[2/4] Performing build step for 'bootloader'
-[1/1] cd /home/omen/esp/smart_watch/build/bootloader/esp-idf/esptool_py && /home/omen/.espressif/python_env/idf5.2_py3.10_env/bin/python /home/omen/esp/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x1000 /home/omen/esp/smart_watch/build/bootloader/bootloader.bin
-Bootloader binary size 0x6f30 bytes. 0xd0 bytes (1%) free.

@@ -1,7 +1,0 @@
--- git rev-parse returned 'fatal: not a git repository (or any of the parent directories): .git'
--- Could not use 'git describe' to determine PROJECT_VER.
--- Building ESP-IDF components for target esp32
-NOTICE: Manifest files have changed, solving dependencies.
-..NOTICE: Updating lock file at /home/omen/esp/smart_watch/dependencies.lock
-NOTICE: Processing 2 dependencies:
-NOTICE: [1/2] lvgl/lvgl (9.5.0)

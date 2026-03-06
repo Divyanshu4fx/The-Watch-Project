@@ -1,0 +1,89 @@
+# ==========================================
+# OS & Environment Files
+# ==========================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ==========================================
+# IDEs & Editors
+# ==========================================
+# Android Studio / IntelliJ
+*.iml
+.idea/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/navEditor.xml
+.idea/runConfigurations.xml
+
+# VS Code (Common for ESP-IDF)
+.vscode/
+*.code-workspace
+
+# ==========================================
+# ESP-IDF & C/C++ Project
+# ==========================================
+# Build directory
+build/
+
+# ESP-IDF Component Manager
+managed_components/
+dependencies.lock
+
+# Configuration backups
+sdkconfig.old
+sdkconfig.ci
+
+# Compiled binaries and artifacts
+*.bin
+*.elf
+*.map
+*.o
+*.a
+*.obj
+*.hex
+
+# ==========================================
+# Android & Gradle Project
+# ==========================================
+# Gradle files
+.gradle/
+*/build/
+*/*/build/
+
+# Local configuration (SDK paths, NDK paths, etc.)
+local.properties
+
+# Compiled Android artifacts
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# C/C++ Native builds for Android (JNI/NDK)
+.externalNativeBuild/
+.cxx/
+
+# Profiling and captures
+/captures/
+*.hprof
+
+# Keystores and signing files (SECURITY: Never commit these!)
+*.jks
+*.keystore
+keystore.properties

@@ -1,4 +1,4 @@
-/* * Data converted from /home/omen/esp/smart_watch/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from /home/omen/The Watch Project/smart_watch/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 .section .rodata.embedded

@@ -1,4 +1,4 @@
-# Install script for directory: /home/omen/esp/smart_watch/main
+# Install script for directory: /home/omen/The Watch Project/smart_watch/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

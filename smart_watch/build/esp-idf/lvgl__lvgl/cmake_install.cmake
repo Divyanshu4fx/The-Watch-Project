@@ -1,4 +1,4 @@
-# Install script for directory: /home/omen/esp/smart_watch/managed_components/lvgl__lvgl
+# Install script for directory: /home/omen/The Watch Project/smart_watch/managed_components/lvgl__lvgl
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
