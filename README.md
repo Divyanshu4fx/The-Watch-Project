@@ -13,15 +13,14 @@ A functional smartwatch proof of concept built on the ESP32. It uses a BLE GATT 
 ## Hardware
 * **Device:** [M5Stack M5StickC Plus2](https://docs.m5stack.com/en/core/M5StickC%20PLUS2)
 * **MCU:** ESP32-PICO-V3-02
-* **Display:** 1.14" ST7789 TFT LCD (240x135)
 
 ## Repository Structure
 ```text
-├── esp32_firmware/       # ESP-IDF C/C++ project
+├── smart_watch/       # ESP-IDF C/C++ project
 │   ├── main/             # Core logic and BLE tasks
 │   ├── main/ui/          # Generated EEZ Studio files
 │   └── CMakeLists.txt
-└── android_app/          # Android Studio project
+└── WatchAppNordic/          # Android Studio project
     ├── app/              # BLE connection and time sync
     └── build.gradle
 ```
@@ -31,20 +30,20 @@ A functional smartwatch proof of concept built on the ESP32. It uses a BLE GATT 
 ### 1. ESP32 Firmware
 Requires **ESP-IDF v5.x**.
 ```bash
-cd esp32_firmware
+cd smart_watch
 idf.py set-target esp32
 idf.py build flash monitor
 ```
 
 ### 2. Android App
-1. Open the `android_app` folder in Android Studio.
+1. Open the `WatchAppNordic` folder in Android Studio.
 2. Sync Gradle and build.
 3. Run on a physical Android device (BLE scanning fails in the emulator).
 
 ## Editing the UI
 1. Open the UI project in EEZ Studio.
 2. Edit the layout and click "Generate Code".
-3. Overwrite the files in `esp32_firmware/main/ui/` with the new export.
+3. Overwrite the files in `smart_watch/main/ui/` with the new export.
 4. Rebuild the ESP32 firmware.
 
 ## To-Do
