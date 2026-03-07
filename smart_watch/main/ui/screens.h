@@ -23,9 +23,8 @@ typedef struct _objects_t {
     lv_obj_t *bluetooth_icon;
     lv_obj_t *obj0;
     lv_obj_t *battery_percentage_label;
-    lv_obj_t *obj1;
     lv_obj_t *date_label;
-    lv_obj_t *obj2;
+    lv_obj_t *week_label;
 } objects_t;
 
 extern objects_t objects;

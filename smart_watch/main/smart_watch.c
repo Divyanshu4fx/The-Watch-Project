@@ -9,6 +9,7 @@
 
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
+#include "driver/i2c_master.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_heap_caps.h"
@@ -31,6 +32,8 @@
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 
+#include "pcf8563.h"
+
 #include "nvs_flash.h"
 #include "pins.h"
 #include "ui.h"
@@ -38,6 +41,12 @@
 #define SCREEN_W 240
 #define SCREEN_H 135
 #define LCD_HOST SPI2_HOST
+
+// I2C pins for the RTC
+#define I2C_PORT I2C_NUM_0
+#define SDA_GPIO GPIO_NUM_21
+#define SCL_GPIO GPIO_NUM_22
+#define RTC_ADDR 0x51
 
 static const char *TAG = "BLE_CLOCK";
 
@@ -47,7 +56,70 @@ static uint8_t own_addr_type;
 static adc_oneshot_unit_handle_t adc1_handle;
 static adc_cali_handle_t adc_cali_handle;
 
-void battery_adc_init(void) {
+static volatile bool screen_on = true;
+static volatile uint32_t last_activity_time = 0;
+
+static i2c_dev_t rtc_handle;
+
+static void IRAM_ATTR button_isr_handler(void *arg)
+{
+    // Record the time of the button press (in milliseconds)
+    last_activity_time = esp_log_timestamp();
+    screen_on = true;
+}
+
+void button_init(void)
+{
+    gpio_config_t btn_conf = {
+        .intr_type = GPIO_INTR_NEGEDGE, // Trigger on press (high to low)
+        .mode = GPIO_MODE_INPUT,
+        .pin_bit_mask = (1ULL << M5_BUTTON_A_PIN),
+        .pull_down_en = 0,
+        .pull_up_en = 1 // Enable internal pull-up
+    };
+    gpio_config(&btn_conf);
+
+    // Install GPIO ISR service and attach the handler
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(M5_BUTTON_A_PIN, button_isr_handler, NULL);
+}
+
+void rtc_initialize(void)
+{
+    i2cdev_init();
+
+    pcf8563_init_desc(&rtc_handle, I2C_PORT, SDA_GPIO, SCL_GPIO);
+}
+
+void set_time_from_rtc(void)
+{
+    struct tm rtc_time;
+    bool valid = false;
+
+    if (pcf8563_get_time(&rtc_handle, &rtc_time, &valid) != ESP_OK)
+    {
+        ESP_LOGE("RTC", "Failed to read time from RTC");
+        return;
+    }
+    if (!valid)
+    {
+        ESP_LOGE("RTC", "Time not Valid");
+        return;
+    }
+    time_t now = mktime(&rtc_time);
+
+    struct timeval tv = {
+        .tv_sec = now,
+        .tv_usec = 0};
+
+    // Set ESP32 system time
+    settimeofday(&tv, NULL);
+
+    ESP_LOGI("RTC", "System time updated from RTC");
+}
+
+void battery_adc_init(void)
+{
     // 1. Initialize ADC Unit 1
     adc_oneshot_unit_init_cfg_t init_config = {
         .unit_id = ADC_UNIT_1,
@@ -57,7 +129,7 @@ void battery_adc_init(void) {
     // 2. Configure GPIO38 (ADC1 Channel 2)
     adc_oneshot_chan_cfg_t config = {
         .bitwidth = ADC_BITWIDTH_12,
-        .atten = ADC_ATTEN_DB_11, 
+        .atten = ADC_ATTEN_DB_11,
     };
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, ADC_CHANNEL_2, &config));
 
@@ -70,35 +142,43 @@ void battery_adc_init(void) {
     ESP_ERROR_CHECK(adc_cali_create_scheme_line_fitting(&cali_config, &adc_cali_handle));
 }
 
-int get_battery_percent(void) {
+int get_battery_percent(void)
+{
     int raw_val = 0;
     int sample;
     int voltage_mv;
-    
+
     // Take 10 quick samples to average out immediate hardware noise
-    for(int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10; i++)
+    {
         adc_oneshot_read(adc1_handle, ADC_CHANNEL_2, &sample);
         raw_val += sample;
     }
     raw_val /= 10;
-    
+
     adc_cali_raw_to_voltage(adc_cali_handle, raw_val, &voltage_mv);
     float battery_voltage = (voltage_mv * 2.0) / 1000.0;
 
     // Calculate the raw, jumping percentage
     int raw_pct;
-    if (battery_voltage >= 4.15) raw_pct = 100;
-    else if (battery_voltage <= 3.30) raw_pct = 0;
-    else raw_pct = (int)((battery_voltage - 3.30) / (4.15 - 3.30) * 100);
+    if (battery_voltage >= 4.15)
+        raw_pct = 100;
+    else if (battery_voltage <= 3.30)
+        raw_pct = 0;
+    else
+        raw_pct = (int)((battery_voltage - 3.30) / (4.15 - 3.30) * 100);
 
     // --- THE SMOOTHING FILTER ---
     // static means this variable remembers its value between function calls
-    static float smoothed_pct = -1.0; 
-    
-    if (smoothed_pct == -1.0) {
+    static float smoothed_pct = -1.0;
+
+    if (smoothed_pct == -1.0)
+    {
         // On the very first boot, trust the raw reading immediately
-        smoothed_pct = raw_pct; 
-    } else {
+        smoothed_pct = raw_pct;
+    }
+    else
+    {
         // Blend 95% of the old stable value with only 5% of the new jumping value
         smoothed_pct = (smoothed_pct * 0.95) + (raw_pct * 0.05);
     }
@@ -106,28 +186,31 @@ int get_battery_percent(void) {
     return (int)smoothed_pct;
 }
 
-bool is_charging(void) {
+bool is_charging(void)
+{
     int raw_val = 0;
     int sample;
     int voltage_mv;
-    
+
     // Take 10 samples to prevent false spikes
-    for(int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10; i++)
+    {
         adc_oneshot_read(adc1_handle, ADC_CHANNEL_2, &sample);
         raw_val += sample;
     }
     raw_val /= 10;
-    
+
     adc_cali_raw_to_voltage(adc_cali_handle, raw_val, &voltage_mv);
 
     // Calculate actual battery voltage
     float battery_voltage = (voltage_mv * 2.0) / 1000.0;
 
     // If voltage is artificially high, the charger is actively running
-    if (battery_voltage >= 4.18) {
+    if (battery_voltage >= 4.18)
+    {
         return true;
     }
-    
+
     return false;
 }
 /* ================= BLE UUIDs ================= */
@@ -209,6 +292,13 @@ static int time_write_handler(uint16_t conn_handle,
             .tv_usec = 0};
         settimeofday(&tv, NULL);
 
+        time_t now;
+        struct tm timeinfo;
+        time(&now);
+        localtime_r(&now, &timeinfo);
+        esp_err_t err = pcf8563_set_time(&rtc_handle, &timeinfo);
+        if (err != ESP_OK)
+            ESP_LOGE(TAG, "Failed to set time in RTC");
         ESP_LOGI(TAG, "Time synced: %lu", unix_time);
     }
     return 0;
@@ -431,193 +521,101 @@ void clock_task(void *pvParameters)
     char time_str[16];
     char date_str[20];
     int last_sec = -1; // Used to prevent unnecessary screen updates
+
+    last_activity_time = esp_log_timestamp();
+
     while (1)
     {
-        time_t now;
-        struct tm timeinfo;
-        time(&now);
-        localtime_r(&now, &timeinfo);
-
-        // Only update the UI text if the second has actually changed
-        if (timeinfo.tm_sec != last_sec)
+        uint32_t current_time = esp_log_timestamp();
+        // Check for 10-second timeout (10000 milliseconds)
+        if (screen_on && (current_time - last_activity_time > 10000))
         {
-            last_sec = timeinfo.tm_sec;
-
-            uint8_t hour = timeinfo.tm_hour;
-            bool is_pm = (hour >= 12);
-            uint8_t weekday = timeinfo.tm_wday;
-
-            // Convert 24-hour to 12-hour format properly
-            if (hour > 12)
-            {
-                hour = hour - 12;
-            }
-            else if (hour == 0)
-            {
-                hour = 12; // Handle midnight
-            }
-
-            // Update AM/PM Label
-            if (is_pm)
-            {
-                lv_label_set_text(objects.am_pm, "PM");
-            }
-            else
-            {
-                lv_label_set_text(objects.am_pm, "AM");
-            }
-
-            // Update Time Label
-            sprintf(time_str, "%02d:%02d:%02d", hour, timeinfo.tm_min, timeinfo.tm_sec);
-            lv_label_set_text(objects.time_lable, time_str);
-
-            sprintf(date_str, "%02d/%02d/%04d", timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year + 1900);
-            lv_label_set_text(objects.date_label, date_str);
-
-            lv_label_set_text(objects.obj2, num_to_week(weekday));
-
-            // Update BLE Status Label Visibility
-            if (ble_connected)
-            {
-                lv_obj_clear_flag(objects.bluetooth_icon, LV_OBJ_FLAG_HIDDEN); // Show it
-            }
-            else
-            {
-                lv_obj_add_flag(objects.bluetooth_icon, LV_OBJ_FLAG_HIDDEN); // Hide it
-            }
-
-            if(is_charging())
-            {
-                lv_obj_set_style_text_color(objects.battery_percentage_label,lv_color_hex(0x00FF00), 0);
-            }
-            else
-            {
-                lv_obj_set_style_text_color(objects.battery_percentage_label,lv_color_hex(0x000000), 0);
-            }
-
-            char buf[4];
-            snprintf(buf, sizeof(buf), "%d", get_battery_percent());
-            lv_label_set_text(objects.battery_percentage_label, buf);
+            screen_on = false;
+            // Turn off backlight
+            gpio_set_level(M5_TFT_BACKLIGHT_PIN, 0);
+            ESP_LOGI(TAG, "Screen turned off due to inactivity.");
         }
 
-        // Let LVGL process the changes and draw to the screen
-        lv_timer_handler();
+        if (screen_on)
+        {
+            // Turn backlight on (in case it just woke up)
+            gpio_set_level(M5_TFT_BACKLIGHT_PIN, 1);
+
+            time_t now;
+            struct tm timeinfo;
+            time(&now);
+            localtime_r(&now, &timeinfo);
+
+            // Only update the UI text if the second has actually changed
+            if (timeinfo.tm_sec != last_sec)
+            {
+                last_sec = timeinfo.tm_sec;
+
+                uint8_t hour = timeinfo.tm_hour;
+                bool is_pm = (hour >= 12);
+                uint8_t weekday = timeinfo.tm_wday;
+
+                // Convert 24-hour to 12-hour format properly
+                if (hour > 12)
+                {
+                    hour = hour - 12;
+                }
+                else if (hour == 0)
+                {
+                    hour = 12; // Handle midnight
+                }
+
+                // Update AM/PM Label
+                if (is_pm)
+                {
+                    lv_label_set_text(objects.am_pm, "PM");
+                }
+                else
+                {
+                    lv_label_set_text(objects.am_pm, "AM");
+                }
+
+                // Update Time Label
+                sprintf(time_str, "%02d:%02d:%02d", hour, timeinfo.tm_min, timeinfo.tm_sec);
+                lv_label_set_text(objects.time_lable, time_str);
+
+                sprintf(date_str, "%02d/%02d/%04d", timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year + 1900);
+                lv_label_set_text(objects.date_label, date_str);
+
+                lv_label_set_text(objects.week_label, num_to_week(weekday));
+
+                // Update BLE Status Label Visibility
+                if (ble_connected)
+                {
+                    lv_obj_clear_flag(objects.bluetooth_icon, LV_OBJ_FLAG_HIDDEN); // Show it
+                }
+                else
+                {
+                    lv_obj_add_flag(objects.bluetooth_icon, LV_OBJ_FLAG_HIDDEN); // Hide it
+                }
+
+                if (is_charging())
+                {
+                    lv_obj_set_style_text_color(objects.battery_percentage_label, lv_color_hex(0x55FF55), 0);
+                }
+                else
+                {
+                    lv_obj_set_style_text_color(objects.battery_percentage_label, lv_color_hex(0x000000), 0);
+                }
+
+                char buf[5];
+                snprintf(buf, sizeof(buf), "%d%%", get_battery_percent());
+                lv_label_set_text(objects.battery_percentage_label, buf);
+            }
+
+            // Let LVGL process the changes and draw to the screen
+            lv_timer_handler();
+        }
 
         // 10ms delay is standard for LVGL. It keeps the UI highly responsive
         // without hogging the CPU from your BLE stack.
         vTaskDelay(pdMS_TO_TICKS(100));
     }
-
-    // /* --- Set Screen Background to Black --- */
-    // lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x000000), 0);
-
-    // /* --- 4. Create your UI Objects --- */
-
-    // // 1. Time Label
-    // lv_obj_t *time_label = lv_label_create(lv_scr_act());
-    // lv_obj_set_style_text_color(time_label, lv_color_hex(0xFFFFFF), 0); // Make text white
-    // lv_obj_set_style_text_font(time_label, &lv_font_montserrat_40, 0);
-    // // Align it to the center, but shift it slightly left (-15px) to make room for AM/PM
-    // lv_obj_align(time_label, LV_ALIGN_CENTER, -15, 0);
-
-    // // 2. AM/PM Label
-    // lv_obj_t *ampm_label = lv_label_create(lv_scr_act());
-    // lv_obj_set_style_text_font(ampm_label, &lv_font_montserrat_24, 0);
-    // lv_obj_set_style_text_color(ampm_label, lv_color_hex(0xFF0000), 0); // Red color
-    // // Automatically position this label to the right of the time_label
-    // lv_obj_align_to(ampm_label, time_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 45, -5);
-
-    // // 3. BLE Status Label
-    // lv_obj_t *ble_label = lv_label_create(lv_scr_act());
-    // lv_label_set_text(ble_label, "1");
-    // lv_obj_set_style_text_color(ble_label, lv_color_hex(0xFF0000), 0); // Red color
-    // lv_obj_align(ble_label, LV_ALIGN_TOP_LEFT, 5, 5); // Put in top left corner
-    // lv_obj_add_flag(ble_label, LV_OBJ_FLAG_HIDDEN);   // Hide it by default
-
-    // /* --- 5. The LVGL Task Loop --- */
-    // char time_str[16];
-    // int last_sec = -1; // Used to prevent unnecessary screen updates
-
-    // while (1) {
-    //     time_t now;
-    //     struct tm timeinfo;
-    //     time(&now);
-    //     localtime_r(&now, &timeinfo);
-
-    //     // Only update the UI text if the second has actually changed
-    //     if (timeinfo.tm_sec != last_sec) {
-    //         last_sec = timeinfo.tm_sec;
-
-    //         uint8_t hour = timeinfo.tm_hour;
-    //         bool is_pm = (hour >= 12);
-
-    //         // Convert 24-hour to 12-hour format properly
-    //         if (hour > 12) {
-    //             hour = hour - 12;
-    //         } else if (hour == 0) {
-    //             hour = 12; // Handle midnight
-    //         }
-
-    //         // Update AM/PM Label
-    //         if (is_pm) {
-    //             lv_label_set_text(ampm_label, "PM");
-    //         } else {
-    //             lv_label_set_text(ampm_label, "AM");
-    //         }
-
-    //         // Update Time Label
-    //         sprintf(time_str, "%02d:%02d:%02d", hour, timeinfo.tm_min, timeinfo.tm_sec);
-    //         lv_label_set_text(time_label, time_str);
-
-    //         // Update BLE Status Label Visibility
-    //         if (ble_connected) {
-    //             lv_obj_clear_flag(ble_label, LV_OBJ_FLAG_HIDDEN); // Show it
-    //         } else {
-    //             lv_obj_add_flag(ble_label, LV_OBJ_FLAG_HIDDEN);   // Hide it
-    //         }
-    //     }
-
-    //     // Let LVGL process the changes and draw to the screen
-    //     lv_timer_handler();
-
-    //     // 10ms delay is standard for LVGL. It keeps the UI highly responsive
-    //     // without hogging the CPU from your BLE stack.
-    //     vTaskDelay(pdMS_TO_TICKS(100));
-    // }
-
-    // while (1) {
-    //     time_t now;
-    //     struct tm timeinfo;
-    //     time(&now);
-    //     localtime_r(&now, &timeinfo);
-
-    //     memset(buffer, 0x00, SCREEN_W * SCREEN_H * 2);
-
-    //     uint8_t hour = timeinfo.tm_hour;
-    //     if(hour > 12 )
-    //     {
-    //         draw_string(buffer,200,80,"PM",0xF800,2);
-    //         hour = hour - 12;
-    //     }
-    //     else
-    //         draw_string(buffer,200,80,"AM",0xF800,2);
-
-    //     sprintf(time_str, "%02d:%02d:%02d",
-    //             hour,
-    //             timeinfo.tm_min,
-    //             timeinfo.tm_sec);
-
-    //     draw_string(buffer, 30, 45, time_str, 0x07FF, 4);
-
-    //     if (ble_connected) {
-    //         // Draw a red "1" in the top left if a BLE device is currently connected
-    //         draw_string(buffer, 5, 5, "1", 0xF800, 2);
-    //     }
-
-    //     esp_lcd_panel_draw_bitmap(panel, 0, 0, SCREEN_W, SCREEN_H, buffer);
-
-    //     vTaskDelay(pdMS_TO_TICKS(1000));
-    // }
 }
 
 /* ================= MAIN ================= */
@@ -641,6 +639,10 @@ void app_main(void)
 
     battery_adc_init();
     ble_init();
+    // i2c_init();
+    rtc_initialize();
+    set_time_from_rtc();
+    button_init();
 
     xTaskCreatePinnedToCore(clock_task,
                             "ClockTask",

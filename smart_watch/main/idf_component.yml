@@ -4,3 +4,4 @@ dependencies:
   idf:
     version: '>=4.1.0'
   lvgl/lvgl: ^8.4.0
+  esp-idf-lib/pcf8563: '*'

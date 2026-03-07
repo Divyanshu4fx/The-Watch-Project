@@ -34,22 +34,23 @@ void create_screen_main() {
             // time_lable
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.time_lable = obj;
-            lv_obj_set_pos(obj, 38, 46);
+            lv_obj_set_pos(obj, 19, 43);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_GESTURE_BUBBLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
-            lv_obj_set_style_text_color(obj, lv_color_hex(0xfffafafa), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &lv_font_montserrat_40, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_label_set_text(obj, "");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffc0c0c0), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_roboto, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_letter_space(obj, -6, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(obj, "12:00:00");
         }
         {
             // am_pm
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.am_pm = obj;
-            lv_obj_set_pos(obj, 202, 68);
+            lv_obj_set_pos(obj, 207, 88);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_GESTURE_BUBBLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_label_set_text(obj, "");
+            lv_label_set_text(obj, "AM");
         }
         {
             // top_bar
@@ -82,7 +83,7 @@ void create_screen_main() {
         {
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.obj0 = obj;
-            lv_obj_set_pos(obj, 140, -35);
+            lv_obj_set_pos(obj, 135, -35);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_set_src(obj, &img_battery_icon);
             lv_img_set_zoom(obj, 160);
@@ -94,37 +95,31 @@ void create_screen_main() {
             // battery_percentage_label
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.battery_percentage_label = obj;
-            lv_obj_set_pos(obj, 205, 7);
+            lv_obj_set_pos(obj, 200, 7);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_label_set_text(obj, "");
-        }
-        {
-            lv_obj_t *obj = lv_label_create(parent_obj);
-            objects.obj1 = obj;
-            lv_obj_set_pos(obj, 225, 7);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_obj_set_style_text_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_label_set_text(obj, "%");
+            lv_label_set_text(obj, "100");
         }
         {
             // date_label
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.date_label = obj;
-            lv_obj_set_pos(obj, 81, 90);
+            lv_obj_set_pos(obj, 81, 88);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_obj_set_style_text_decor(obj, LV_TEXT_DECOR_UNDERLINE, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_letter_space(obj, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_label_set_text(obj, "");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffc0c0c0), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(obj, "12/12/2026");
         }
         {
+            // week_label
             lv_obj_t *obj = lv_label_create(parent_obj);
-            objects.obj2 = obj;
-            lv_obj_set_pos(obj, 88, 106);
+            objects.week_label = obj;
+            lv_obj_set_pos(obj, 88, 104);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffc0c0c0), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(obj, "Saturday");
         }
     }
     
@@ -132,52 +127,6 @@ void create_screen_main() {
 }
 
 void tick_screen_main() {
-    {
-        const char *new_val = get_var_var_time_str();
-        const char *cur_val = lv_label_get_text(objects.time_lable);
-        if (strcmp(new_val, cur_val) != 0) {
-            tick_value_change_obj = objects.time_lable;
-            lv_label_set_text(objects.time_lable, new_val);
-            tick_value_change_obj = NULL;
-        }
-    }
-    {
-        const char *new_val = get_var_var_am_pm();
-        const char *cur_val = lv_label_get_text(objects.am_pm);
-        if (strcmp(new_val, cur_val) != 0) {
-            tick_value_change_obj = objects.am_pm;
-            lv_label_set_text(objects.am_pm, new_val);
-            tick_value_change_obj = NULL;
-        }
-    }
-    {
-        // const char *new_val = get_var_var_battery_pct();
-        // const char *cur_val = lv_label_get_text(objects.battery_percentage_label);
-        // if (strcmp(new_val, cur_val) != 0) {
-            // tick_value_change_obj = objects.battery_percentage_label;
-            // lv_label_set_text(objects.battery_percentage_label, new_val);
-            lv_label_set_text(objects.battery_percentage_label, "99");
-            // tick_value_change_obj = NULL;
-        // }
-    }
-    {
-        const char *new_val = get_var_var_date_str();
-        const char *cur_val = lv_label_get_text(objects.date_label);
-        if (strcmp(new_val, cur_val) != 0) {
-            tick_value_change_obj = objects.date_label;
-            lv_label_set_text(objects.date_label, new_val);
-            tick_value_change_obj = NULL;
-        }
-    }
-    {
-        const char *new_val = get_var_var_week_day();
-        const char *cur_val = lv_label_get_text(objects.obj2);
-        if (strcmp(new_val, cur_val) != 0) {
-            tick_value_change_obj = objects.obj2;
-            lv_label_set_text(objects.obj2, new_val);
-            tick_value_change_obj = NULL;
-        }
-    }
 }
 
 typedef void (*tick_screen_func_t)();
@@ -196,6 +145,7 @@ void tick_screen_by_id(enum ScreensEnum screenId) {
 //
 
 ext_font_desc_t fonts[] = {
+    { "roboto", &ui_font_roboto },
 #if LV_FONT_MONTSERRAT_8
     { "MONTSERRAT_8", &lv_font_montserrat_8 },
 #endif

@@ -13,25 +13,10 @@ extern "C" {
 // Flow global variables
 
 enum FlowGlobalVariables {
-    FLOW_GLOBAL_VARIABLE_VAR_TIME_STR = 0,
-    FLOW_GLOBAL_VARIABLE_VAR_AM_PM = 1,
-    FLOW_GLOBAL_VARIABLE_VAR_BATTERY_PCT = 2,
-    FLOW_GLOBAL_VARIABLE_VAR_DATE_STR = 3,
-    FLOW_GLOBAL_VARIABLE_VAR_WEEK_DAY = 4
+    FLOW_GLOBAL_VARIABLE_NONE
 };
 
 // Native global variables
-
-extern const char *get_var_var_time_str();
-extern void set_var_var_time_str(const char *value);
-extern const char *get_var_var_am_pm();
-extern void set_var_var_am_pm(const char *value);
-extern int32_t get_var_var_battery_pct();
-extern void set_var_var_battery_pct(int32_t value);
-extern const char *get_var_var_date_str();
-extern void set_var_var_date_str(const char *value);
-extern const char *get_var_var_week_day();
-extern void set_var_var_week_day(const char *value);
 
 #ifdef __cplusplus
 }

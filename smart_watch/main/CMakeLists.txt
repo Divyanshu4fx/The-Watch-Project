@@ -8,7 +8,8 @@ set(MAIN_SRCS
    "ui/ui.c"
    "ui/ui_image_battery_icon.c"
    "ui/ui_image_bluetooth_ico.c"
-   "ui/vars.c"
+   "ui/ui_font_roboto.c"
+#    "ui/vars.c"
 )
 
 set(MAIN_INCLUDE_DIRS
