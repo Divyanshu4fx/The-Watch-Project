@@ -12,6 +12,7 @@
     "ui.c",
     "ui.h",
     "ui_font_roboto.c",
+    "ui_image_alarm_icon.c",
     "ui_image_battery_icon.c",
     "ui_image_bluetooth_ico.c",
     "vars.h"

@@ -25,6 +25,14 @@ typedef struct _objects_t {
     lv_obj_t *battery_percentage_label;
     lv_obj_t *date_label;
     lv_obj_t *week_label;
+    lv_obj_t *alarm_icon;
+    lv_obj_t *alarm_container;
+    lv_obj_t *alarm_icon2;
+    lv_obj_t *alarm_time;
+    lv_obj_t *message_box;
+    lv_obj_t *snooze_btn;
+    lv_obj_t *obj1;
+    lv_obj_t *dimiss_btn;
 } objects_t;
 
 extern objects_t objects;

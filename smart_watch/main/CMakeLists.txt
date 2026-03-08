@@ -8,10 +8,12 @@ set(MAIN_SRCS
    "ui/ui.c"
    "ui/ui_image_battery_icon.c"
    "ui/ui_image_bluetooth_ico.c"
+   "ui/ui_image_alarm_icon.c"
    "ui/ui_font_roboto.c"
    "battery/battery.c"
    "ble/ble.c"
    "clock/clock.c"
+   "input_mgr/buttons.c"
 #    "ui/vars.c"
 )
 
@@ -22,6 +24,7 @@ set(MAIN_INCLUDE_DIRS
     "clock"
     "battery"
     "display"
+    "input_mgr"
 )
 
 set(MAIN_REQUIRES

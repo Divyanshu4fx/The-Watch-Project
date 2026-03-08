@@ -28,6 +28,7 @@
 #include "ble.h"
 #include "battery.h"
 #include "clock.h"
+#include "buttons.h"
 
 #define SCREEN_W 240
 #define SCREEN_H 135
@@ -35,31 +36,9 @@
 
 static const char *TAG = "APP_MAIN";
 
-static volatile bool screen_on = true;
-static volatile uint32_t last_activity_time = 0;
-
-static void IRAM_ATTR button_isr_handler(void *arg)
-{
-    // Record the time of the button press (in milliseconds)
-    last_activity_time = esp_log_timestamp();
-    screen_on = true;
-}
-
-void button_init(void)
-{
-    gpio_config_t btn_conf = {
-        .intr_type = GPIO_INTR_NEGEDGE, // Trigger on press (high to low)
-        .mode = GPIO_MODE_INPUT,
-        .pin_bit_mask = (1ULL << M5_BUTTON_A_PIN),
-        .pull_down_en = 0,
-        .pull_up_en = 1 // Enable internal pull-up
-    };
-    gpio_config(&btn_conf);
-
-    // Install GPIO ISR service and attach the handler
-    gpio_install_isr_service(0);
-    gpio_isr_handler_add(M5_BUTTON_A_PIN, button_isr_handler, NULL);
-}
+volatile bool screen_on = true;
+volatile uint32_t last_activity_time = 0;
+static bool alarm_popup_enabled = false;
 
 static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
@@ -183,7 +162,6 @@ void clock_task(void *pvParameters)
     while (1)
     {
         uint32_t current_time = esp_log_timestamp();
-        // Check for 10-second timeout (10000 milliseconds)
         if (screen_on && (current_time - last_activity_time > 10000))
         {
             screen_on = false;
@@ -191,7 +169,11 @@ void clock_task(void *pvParameters)
             gpio_set_level(M5_TFT_BACKLIGHT_PIN, 0);
             ESP_LOGI(TAG, "Screen turned off due to inactivity.");
         }
+        check_alarms();
+        get_battery_percent();
 
+        if (alarm_popup_enabled)
+            screen_on = true;
         if (screen_on)
         {
             // Turn backlight on (in case it just woke up)
@@ -250,6 +232,15 @@ void clock_task(void *pvParameters)
                     lv_obj_add_flag(objects.bluetooth_icon, LV_OBJ_FLAG_HIDDEN); // Hide it
                 }
 
+                if (is_any_alarm_enabled)
+                {
+                    lv_obj_clear_flag(objects.alarm_icon, LV_OBJ_FLAG_HIDDEN); // Show it
+                }
+                else
+                {
+                    lv_obj_add_flag(objects.alarm_icon, LV_OBJ_FLAG_HIDDEN); // Hide it
+                }
+
                 if (is_charging())
                 {
                     lv_obj_set_style_text_color(objects.battery_percentage_label, lv_color_hex(0x55FF55), 0);
@@ -293,12 +284,18 @@ void app_main(void)
     setenv("TZ", "IST-5:30", 1);
     tzset();
 
+    buzzer_init();
+    buzzer_on();
+    vTaskDelay(pdMS_TO_TICKS(200));
+    buzzer_off();
+
+    input_manager_init();
+    load_alarms_from_nvs();
     battery_adc_init();
     ble_init();
     // i2c_init();
     rtc_initialize();
     get_time_from_rtc();
-    button_init();
 
     xTaskCreatePinnedToCore(clock_task,
                             "ClockTask",
@@ -307,4 +304,44 @@ void app_main(void)
                             5,
                             NULL,
                             1);
+}
+
+void enable_alarm_popup(uint8_t hour, uint8_t minute, char *message)
+{
+    if (alarm_popup_enabled)
+        return;
+
+    // Allocate 6 bytes: 2 for hour + 1 for colon + 2 for minute + 1 for null terminator
+    char buf[10] = {0};
+    snprintf(buf, sizeof(buf), "%02d:%02d", hour, minute);
+
+    lv_label_set_text(objects.alarm_time, buf);
+    if (message != NULL)
+    {
+        lv_label_set_text(objects.message_box, message);
+
+        // Set text alignment to center
+        lv_obj_set_style_text_align(objects.message_box, LV_TEXT_ALIGN_CENTER, 0);
+
+        lv_obj_align(objects.message_box, LV_ALIGN_BOTTOM_MID, 0, 0);
+
+        // Enable circular auto-scrolling for text that exceeds the object's bounding box width
+        lv_label_set_long_mode(objects.message_box, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    }
+
+    // Show the popup container
+    lv_obj_clear_flag(objects.alarm_container, LV_OBJ_FLAG_HIDDEN);
+
+    alarm_popup_enabled = true;
+}
+
+void disable_alarm_popup()
+{
+    if (!alarm_popup_enabled)
+        return;
+
+    // Hide the popup container
+    lv_obj_add_flag(objects.alarm_container, LV_OBJ_FLAG_HIDDEN);
+
+    alarm_popup_enabled = false;
 }
