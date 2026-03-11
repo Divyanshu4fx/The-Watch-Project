@@ -49,7 +49,10 @@ static const char *TAG = "APP_MAIN";
 
 volatile bool screen_on = true;
 volatile uint32_t last_activity_time = 0;
-static bool alarm_popup_enabled = false;
+bool alarm_popup_enabled = false;
+
+
+void enable_alarm_popup(uint8_t hour, uint8_t minute, char *message);
 
 static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
@@ -176,7 +179,7 @@ void clock_task(void *pvParameters)
     // add_notification("Slack", "#general - Alice", "New deployment scheduled for tonight at 11pm. Please review the changelog.", 8, 45);
     // add_notification("Instagram", "New follower", "techguru42 started following you.", 8, 30);
     // add_notification("Phone", "Missed Call", "Missed call from Mom at 7:55 AM", 7, 55);
-
+    // enable_alarm_popup(12, 0, "Testing");
     while (1)
     {
         uint32_t current_time = esp_log_timestamp();
@@ -187,16 +190,12 @@ void clock_task(void *pvParameters)
             gpio_set_level(M5_TFT_BACKLIGHT_PIN, 0);
             ESP_LOGI(TAG, "Screen turned off due to inactivity");
         }
-        else
-        {
-            screen_on = true;
-        }
 
         check_alarms();
         get_battery_percent();
 
-        // if (alarm_popup_enabled || notification_screen_active)
-        //     screen_on = true;
+        if (alarm_popup_enabled || notification_screen_active)
+            screen_on = true;
         if (screen_on)
         {
             // Turn backlight on (in case it just woke up)

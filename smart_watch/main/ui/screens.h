@@ -28,11 +28,13 @@ typedef struct _objects_t {
     lv_obj_t *alarm_icon;
     lv_obj_t *alarm_container;
     lv_obj_t *alarm_icon2;
+    lv_obj_t *obj1;
     lv_obj_t *alarm_time;
     lv_obj_t *message_box;
     lv_obj_t *snooze_btn;
-    lv_obj_t *obj1;
+    lv_obj_t *obj2;
     lv_obj_t *dimiss_btn;
+    lv_obj_t *obj3;
 } objects_t;
 
 extern objects_t objects;

@@ -4,5 +4,6 @@
 #include "pins.h"
 #include "clock.h"
 #include "notification.h"
+#include "find_phone.h"
 
 void input_manager_init(void);

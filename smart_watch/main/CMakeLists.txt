@@ -15,6 +15,7 @@ set(MAIN_SRCS
    "clock/clock.c"
    "input_mgr/buttons.c"
    "notification/notification.c"
+   "find_phone/find_phone.c"
 #    "ui/vars.c"
 )
 
@@ -27,6 +28,7 @@ set(MAIN_INCLUDE_DIRS
     "display"
     "input_mgr"
     "notification"
+    "find_phone"
 )
 
 set(MAIN_REQUIRES

@@ -5,6 +5,7 @@ static const char *TAG = "BL_TASK";
 static bool ble_connected = false;
 static uint8_t own_addr_type;
 static uint16_t ble_conn_handle = 0;
+static uint16_t find_phone_notify_handle = 0;
 
 // extern myalarm_t alarms[MAX_ALARMS]; // defined in clock.c
 // extern uint16_t alarm_notify_handle;
@@ -30,6 +31,9 @@ static const ble_uuid128_t findMyWatch_char_uuid =
 static const ble_uuid128_t notification_char_uuid =
     BLE_UUID128_INIT(0x15, 0xdc, 0xbc, 0x2d, 0x1a, 0x1d, 0x40, 0x79,
                      0xaf, 0x51, 0x3d, 0xa2, 0x22, 0xbe, 0xdc, 0x56);
+static const ble_uuid128_t findPhone_char_uuid =
+    BLE_UUID128_INIT(0x00, 0xda, 0x10, 0x73, 0xdc, 0xfb, 0x46, 0xf7, 
+                     0xb6, 0x20, 0x46, 0x7b, 0x91, 0xa9, 0x68, 0xc5);
 
 static void notify_alarm_to_app(const myalarm_t *alarm)
 {
@@ -226,6 +230,24 @@ static int notification_write_handler(uint16_t conn_handle,
     return 0;
 }
 
+static int find_phone_access_cb(uint16_t conn_handle,
+                                uint16_t attr_handle,
+                                struct ble_gatt_access_ctxt *ctxt,
+                                void *arg)
+{
+    return 0;
+}
+
+void ble_notify_find_phone(uint8_t value)
+{
+    if (!ble_connected)
+        return;
+
+    struct os_mbuf *om = ble_hs_mbuf_from_flat(&value, 1);
+    ble_gatts_notify_custom(ble_conn_handle, find_phone_notify_handle, om);
+    ESP_LOGI(TAG, "Find Phone notify: 0x%02x", value);
+}
+
 static const struct ble_gatt_svc_def gatt_svcs[] = {
     {
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
@@ -252,10 +274,15 @@ static const struct ble_gatt_svc_def gatt_svcs[] = {
                 .access_cb = notification_write_handler,
                 .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP,
             },
+            {
+                .uuid = &findPhone_char_uuid.u,
+                .access_cb = find_phone_access_cb,
+                .val_handle = &find_phone_notify_handle,
+                .flags = BLE_GATT_CHR_F_NOTIFY,
+            },
             {0}},
     },
-    {0}
-};
+    {0}};
 
 static int ble_gap_event(struct ble_gap_event *event, void *arg)
 {

@@ -12,6 +12,7 @@ static const char *TAG = "BUTTONS";
 
 extern volatile bool screen_on;
 extern volatile uint32_t last_activity_time;
+extern bool alarm_popup_enabled;
 
 typedef enum
 {
@@ -131,7 +132,11 @@ void input_event_callback(button_id_t btn_id, button_event_t event)
         {
             ESP_LOGI(TAG, "Button A Short Pressed");
             buzzer_off();
-            if (notification_screen_active)
+            if (find_phone_screen_active)
+            {
+                toggle_find_phone_ring();
+            }
+            else if (notification_screen_active)
             {
                 if (detail_view_active)
                 {
@@ -149,13 +154,21 @@ void input_event_callback(button_id_t btn_id, button_event_t event)
             ESP_LOGI(TAG, "Button A Long Pressed");
             dismiss_alarm();
             // Insert explicit device sleep or sync logic here
-            if (notification_screen_active)
+            if (!(alarm_popup_enabled))
             {
-                hide_notification_screen();
-            }
-            else
-            {
-                show_notification_screen();
+                if (find_phone_screen_active)
+                {
+                    hide_find_phone_screen();
+                }
+                else if (notification_screen_active)
+                {
+                    hide_notification_screen();
+                }
+                else
+                {
+                    show_find_phone_screen();
+                    // show_notification_screen();
+                }
             }
         }
         break;
@@ -165,16 +178,19 @@ void input_event_callback(button_id_t btn_id, button_event_t event)
         {
             ESP_LOGI(TAG, "Button B Short Clicked");
             snooze_alarm(5); // snooze for 5 minutes
-            // Navigate UI forward
-            if (notification_screen_active)
+                             // Navigate UI forward
+            if (!(alarm_popup_enabled))
             {
-                if (detail_view_active)
+                if (notification_screen_active)
                 {
-                    notification_back_to_list();
-                }
-                else
-                {
-                    notification_screen_scroll_down();
+                    if (detail_view_active)
+                    {
+                        notification_back_to_list();
+                    }
+                    else
+                    {
+                        notification_screen_scroll_down();
+                    }
                 }
             }
         }
@@ -185,15 +201,18 @@ void input_event_callback(button_id_t btn_id, button_event_t event)
         {
             ESP_LOGI(TAG, "Button C Short Clicked");
             // Navigate UI backward
-            if (notification_screen_active)
+            if (!(alarm_popup_enabled))
             {
-                if (detail_view_active)
+                if (notification_screen_active)
                 {
-                    notification_back_to_list();
-                }
-                else
-                {
-                    notification_screen_scroll_up();
+                    if (detail_view_active)
+                    {
+                        notification_back_to_list();
+                    }
+                    else
+                    {
+                        notification_screen_scroll_up();
+                    }
                 }
             }
         }

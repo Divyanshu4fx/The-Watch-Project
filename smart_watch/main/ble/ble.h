@@ -28,3 +28,5 @@ void ble_init(void);
 
 // Returns current ble connection status
 bool is_ble_connected(void);
+
+void ble_notify_find_phone(uint8_t value);
