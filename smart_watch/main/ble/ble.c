@@ -27,6 +27,10 @@ static const ble_uuid128_t findMyWatch_char_uuid =
     BLE_UUID128_INIT(0x87, 0x2e, 0x03, 0xad, 0x3d, 0x5d, 0x4b, 0x79,
                      0x95, 0x71, 0x05, 0x8e, 0xea, 0x06, 0x6e, 0x3e);
 
+static const ble_uuid128_t notification_char_uuid =
+    BLE_UUID128_INIT(0x15, 0xdc, 0xbc, 0x2d, 0x1a, 0x1d, 0x40, 0x79,
+                     0xaf, 0x51, 0x3d, 0xa2, 0x22, 0xbe, 0xdc, 0x56);
+
 static void notify_alarm_to_app(const myalarm_t *alarm)
 {
     if (!ble_connected)
@@ -58,7 +62,7 @@ static int time_write_handler(uint16_t conn_handle,
         memcpy(&unix_time, ctxt->om->om_data, 4);
 
         struct timeval tv = {
-            .tv_sec = unix_time,
+            .tv_sec = unix_time + 2,
             .tv_usec = 0};
         settimeofday(&tv, NULL);
 
@@ -153,6 +157,75 @@ static int find_my_watch_handler(uint16_t conn_handle,
     return 0;
 }
 
+static int notification_write_handler(uint16_t conn_handle,
+                                      uint16_t attr_handle,
+                                      struct ble_gatt_access_ctxt *ctxt,
+                                      void *arg)
+{
+    if (ctxt->op != BLE_GATT_ACCESS_OP_WRITE_CHR)
+        return 0;
+
+    uint8_t *data = ctxt->om->om_data;
+    uint16_t len = ctxt->om->om_len;
+
+    // Minimum: command byte + at least "a|b|c" = 6 bytes
+    if (len < 6)
+    {
+        ESP_LOGW(TAG, "Notification packet too short: %d bytes", len);
+        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+    }
+
+    // First byte is command: 0x01 = notification
+    uint8_t cmd = data[0];
+    if (cmd != 0x01)
+    {
+        ESP_LOGW(TAG, "Unknown notification command: 0x%02x", cmd);
+        return 0;
+    }
+
+    // Payload starts after command byte: "app_name|title|body"
+    char payload[182] = {0};
+    uint16_t payload_len = len - 1;
+    if (payload_len >= sizeof(payload))
+        payload_len = sizeof(payload) - 1;
+    memcpy(payload, &data[1], payload_len);
+    payload[payload_len] = '\0';
+
+    // Parse pipe-delimited fields
+    char app_name[24] = {0};
+    char title[32] = {0};
+    char body[128] = {0};
+
+    char *saveptr = NULL;
+    char *token;
+
+    // App name
+    token = strtok_r(payload, "|", &saveptr);
+    if (token != NULL)
+    {
+        strncpy(app_name, token, sizeof(app_name) - 1);
+    }
+
+    // Title
+    token = strtok_r(NULL, "|", &saveptr);
+    if (token != NULL)
+    {
+        strncpy(title, token, sizeof(title) - 1);
+    }
+
+    // Body — take the rest (may contain '|' characters)
+    if (saveptr != NULL && *saveptr != '\0')
+    {
+        strncpy(body, saveptr, sizeof(body) - 1);
+    }
+
+    ESP_LOGI(TAG, "Notification: [%s] %s — %s", app_name, title, body);
+
+    on_ble_notification_received(app_name, title, body);
+
+    return 0;
+}
+
 static const struct ble_gatt_svc_def gatt_svcs[] = {
     {
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
@@ -174,9 +247,15 @@ static const struct ble_gatt_svc_def gatt_svcs[] = {
                 .access_cb = find_my_watch_handler,
                 .flags = BLE_GATT_CHR_F_WRITE,
             },
+            {
+                .uuid = &notification_char_uuid.u,
+                .access_cb = notification_write_handler,
+                .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP,
+            },
             {0}},
     },
-    {0}};
+    {0}
+};
 
 static int ble_gap_event(struct ble_gap_event *event, void *arg)
 {
@@ -185,7 +264,8 @@ static int ble_gap_event(struct ble_gap_event *event, void *arg)
     case BLE_GAP_EVENT_CONNECT:
         ESP_LOGI(TAG, "Device connected! Status: %d", event->connect.status);
         ble_connected = (event->connect.status == 0);
-        if (ble_connected) {
+        if (ble_connected)
+        {
             ble_conn_handle = event->connect.conn_handle;
         }
         break;

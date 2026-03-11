@@ -29,6 +29,17 @@
 #include "battery.h"
 #include "clock.h"
 #include "buttons.h"
+#include "notification.h"
+
+// System Stats
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_log.h"
+#include "esp_system.h"
+#include "esp_chip_info.h"
+#include "esp_heap_caps.h"
+#include "esp_flash.h"
+#include "esp_private/esp_clk.h"
 
 #define SCREEN_W 240
 #define SCREEN_H 135
@@ -159,21 +170,33 @@ void clock_task(void *pvParameters)
 
     last_activity_time = esp_log_timestamp();
 
+    // ── Fake notifications for testing ──
+    // add_notification("WhatsApp", "John: Hey!", "Hey, are you free today? Want to grab coffee later? I'm free after 4pm.", 9, 32);
+    // add_notification("Gmail", "Meeting Reminder", "Your 3:00 PM meeting with the design team starts in 30 minutes. Conference Room B.", 9, 15);
+    // add_notification("Slack", "#general - Alice", "New deployment scheduled for tonight at 11pm. Please review the changelog.", 8, 45);
+    // add_notification("Instagram", "New follower", "techguru42 started following you.", 8, 30);
+    // add_notification("Phone", "Missed Call", "Missed call from Mom at 7:55 AM", 7, 55);
+
     while (1)
     {
         uint32_t current_time = esp_log_timestamp();
-        if (screen_on && (current_time - last_activity_time > 10000))
+        if (screen_on && (current_time - last_activity_time > 10000) && !(alarm_popup_enabled || notification_screen_active))
         {
             screen_on = false;
             // Turn off backlight
             gpio_set_level(M5_TFT_BACKLIGHT_PIN, 0);
-            ESP_LOGI(TAG, "Screen turned off due to inactivity.");
+            ESP_LOGI(TAG, "Screen turned off due to inactivity");
         }
+        else
+        {
+            screen_on = true;
+        }
+
         check_alarms();
         get_battery_percent();
 
-        if (alarm_popup_enabled)
-            screen_on = true;
+        // if (alarm_popup_enabled || notification_screen_active)
+        //     screen_on = true;
         if (screen_on)
         {
             // Turn backlight on (in case it just woke up)
@@ -240,16 +263,6 @@ void clock_task(void *pvParameters)
                 {
                     lv_obj_add_flag(objects.alarm_icon, LV_OBJ_FLAG_HIDDEN); // Hide it
                 }
-
-                if (is_charging())
-                {
-                    lv_obj_set_style_text_color(objects.battery_percentage_label, lv_color_hex(0x55FF55), 0);
-                }
-                else
-                {
-                    lv_obj_set_style_text_color(objects.battery_percentage_label, lv_color_hex(0x000000), 0);
-                }
-
                 char buf[5];
                 snprintf(buf, sizeof(buf), "%d%%", get_battery_percent());
                 lv_label_set_text(objects.battery_percentage_label, buf);
@@ -265,10 +278,37 @@ void clock_task(void *pvParameters)
     }
 }
 
+void system_info_task(void *pvParameters)
+{
+    esp_chip_info_t chip_info;
+    uint32_t flash_size;
+
+    /* ---- PRINT ONCE ---- */
+    esp_chip_info(&chip_info);
+    esp_flash_get_size(NULL, &flash_size);
+
+    ESP_LOGI(TAG, "Cores: %d", chip_info.cores);
+    // ESP_LOGI(TAG, "CPU freq: %lu MHz", esp_cpu_get_freq_mhz());
+    ESP_LOGI(TAG, "CPU freq: %d MHz", esp_clk_cpu_freq() / 1000000);
+    ESP_LOGI(TAG, "Total RAM: %d KB",
+             heap_caps_get_total_size(MALLOC_CAP_DEFAULT) / 1024);
+    ESP_LOGI(TAG, "Flash: %lu MB", flash_size / (1024 * 1024));
+
+    /* ---- PRINT CONTINUOUSLY ---- */
+    while (1)
+    {
+        ESP_LOGI(TAG, "Available RAM: %lu KB",
+                 esp_get_free_heap_size() / 1024);
+
+        vTaskDelay(pdMS_TO_TICKS(5000));
+    }
+}
+
 /* ================= MAIN ================= */
 
 void app_main(void)
 {
+    xTaskCreate(system_info_task, "sys_info", 2048, NULL, 0, NULL);
     // NVS is required for BLE to operate correctly (even if not saving bonding data)
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -285,13 +325,14 @@ void app_main(void)
     tzset();
 
     buzzer_init();
-    buzzer_on();
-    vTaskDelay(pdMS_TO_TICKS(200));
-    buzzer_off();
+    // buzzer_on();
+    // vTaskDelay(pdMS_TO_TICKS(200));
+    // buzzer_off();
 
     input_manager_init();
     load_alarms_from_nvs();
     battery_adc_init();
+    notifications_init();
     ble_init();
     // i2c_init();
     rtc_initialize();

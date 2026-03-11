@@ -131,12 +131,32 @@ void input_event_callback(button_id_t btn_id, button_event_t event)
         {
             ESP_LOGI(TAG, "Button A Short Pressed");
             buzzer_off();
+            if (notification_screen_active)
+            {
+                if (detail_view_active)
+                {
+                    notification_back_to_list();
+                }
+                else
+                {
+                    // Open selected notification detail
+                    notification_show_detail(selected_index);
+                }
+            }
         }
         else if (event == BTN_EVENT_LONG_CLICK)
         {
             ESP_LOGI(TAG, "Button A Long Pressed");
             dismiss_alarm();
             // Insert explicit device sleep or sync logic here
+            if (notification_screen_active)
+            {
+                hide_notification_screen();
+            }
+            else
+            {
+                show_notification_screen();
+            }
         }
         break;
 
@@ -146,6 +166,17 @@ void input_event_callback(button_id_t btn_id, button_event_t event)
             ESP_LOGI(TAG, "Button B Short Clicked");
             snooze_alarm(5); // snooze for 5 minutes
             // Navigate UI forward
+            if (notification_screen_active)
+            {
+                if (detail_view_active)
+                {
+                    notification_back_to_list();
+                }
+                else
+                {
+                    notification_screen_scroll_down();
+                }
+            }
         }
         break;
 
@@ -154,6 +185,17 @@ void input_event_callback(button_id_t btn_id, button_event_t event)
         {
             ESP_LOGI(TAG, "Button C Short Clicked");
             // Navigate UI backward
+            if (notification_screen_active)
+            {
+                if (detail_view_active)
+                {
+                    notification_back_to_list();
+                }
+                else
+                {
+                    notification_screen_scroll_up();
+                }
+            }
         }
         break;
 

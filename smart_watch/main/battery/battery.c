@@ -73,30 +73,30 @@ int get_battery_percent(void)
     return (int)smoothed_pct;
 }
 
-bool is_charging(void)
-{
-    int raw_val = 0;
-    int sample;
-    int voltage_mv;
+// bool is_charging(void)
+// {
+//     int raw_val = 0;
+//     int sample;
+//     int voltage_mv;
 
-    // Take 10 samples to prevent false spikes
-    for (int i = 0; i < 10; i++)
-    {
-        adc_oneshot_read(adc1_handle, ADC_CHANNEL_2, &sample);
-        raw_val += sample;
-    }
-    raw_val /= 10;
+//     // Take 10 samples to prevent false spikes
+//     for (int i = 0; i < 10; i++)
+//     {
+//         adc_oneshot_read(adc1_handle, ADC_CHANNEL_2, &sample);
+//         raw_val += sample;
+//     }
+//     raw_val /= 10;
 
-    adc_cali_raw_to_voltage(adc_cali_handle, raw_val, &voltage_mv);
+//     adc_cali_raw_to_voltage(adc_cali_handle, raw_val, &voltage_mv);
 
-    // Calculate actual battery voltage
-    float battery_voltage = (voltage_mv * 2.0) / 1000.0;
+//     // Calculate actual battery voltage
+//     float battery_voltage = (voltage_mv * 2.0) / 1000.0;
 
-    // If voltage is artificially high, the charger is actively running
-    if (battery_voltage >= 4.18)
-    {
-        return true;
-    }
+//     // If voltage is artificially high, the charger is actively running
+//     if (battery_voltage >= 4.18)
+//     {
+//         return true;
+//     }
 
-    return false;
-}
+//     return false;
+// }

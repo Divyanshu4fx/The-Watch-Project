@@ -19,4 +19,4 @@ void battery_adc_init(void);
 
 int get_battery_percent(void);
 
-bool is_charging(void);
+// bool is_charging(void);

@@ -14,6 +14,7 @@ set(MAIN_SRCS
    "ble/ble.c"
    "clock/clock.c"
    "input_mgr/buttons.c"
+   "notification/notification.c"
 #    "ui/vars.c"
 )
 
@@ -25,6 +26,7 @@ set(MAIN_INCLUDE_DIRS
     "battery"
     "display"
     "input_mgr"
+    "notification"
 )
 
 set(MAIN_REQUIRES
