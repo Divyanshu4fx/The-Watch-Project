@@ -32,8 +32,11 @@ static const ble_uuid128_t notification_char_uuid =
     BLE_UUID128_INIT(0x15, 0xdc, 0xbc, 0x2d, 0x1a, 0x1d, 0x40, 0x79,
                      0xaf, 0x51, 0x3d, 0xa2, 0x22, 0xbe, 0xdc, 0x56);
 static const ble_uuid128_t findPhone_char_uuid =
-    BLE_UUID128_INIT(0x00, 0xda, 0x10, 0x73, 0xdc, 0xfb, 0x46, 0xf7, 
+    BLE_UUID128_INIT(0x00, 0xda, 0x10, 0x73, 0xdc, 0xfb, 0x46, 0xf7,
                      0xb6, 0x20, 0x46, 0x7b, 0x91, 0xa9, 0x68, 0xc5);
+static const ble_uuid128_t irRemote_char_uuid =
+    BLE_UUID128_INIT(0x33, 0x06, 0x4b, 0xb2, 0x1d, 0xb2, 0x48, 0x63,
+                     0x9a, 0xc1, 0xe1, 0x1c, 0x58, 0x1e, 0xf2, 0x4f);
 
 static void notify_alarm_to_app(const myalarm_t *alarm)
 {
@@ -248,6 +251,27 @@ void ble_notify_find_phone(uint8_t value)
     ESP_LOGI(TAG, "Find Phone notify: 0x%02x", value);
 }
 
+static int ir_remote_access_cb(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
+{
+    ESP_LOGI(TAG,"IR command callback");
+    if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR)
+    {
+        int len = ctxt->om->om_len;
+        // uint64_t command = ctxt->om->om_data[0];
+        uint32_t command = 0;
+        for(int i = 1; i < len ; i++)
+        {
+            command = (command << 8) | ctxt->om->om_data[i];
+        }
+
+        ESP_LOGI(TAG,"IR command received %llx",(unsigned long long)command);
+
+        execute_ir_command(command);
+
+    }
+    return 0;
+}
+
 static const struct ble_gatt_svc_def gatt_svcs[] = {
     {
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
@@ -279,6 +303,10 @@ static const struct ble_gatt_svc_def gatt_svcs[] = {
                 .access_cb = find_phone_access_cb,
                 .val_handle = &find_phone_notify_handle,
                 .flags = BLE_GATT_CHR_F_NOTIFY,
+            },
+            {.uuid = &irRemote_char_uuid.u,
+             .access_cb = ir_remote_access_cb,
+             .flags = BLE_GATT_CHR_F_WRITE,
             },
             {0}},
     },

@@ -30,6 +30,7 @@
 #include "clock.h"
 #include "buttons.h"
 #include "notification.h"
+#include "ir_blaster.h"
 
 // System Stats
 #include "freertos/FreeRTOS.h"
@@ -336,6 +337,7 @@ void app_main(void)
     // i2c_init();
     rtc_initialize();
     get_time_from_rtc();
+    init_ir_blaster();
 
     xTaskCreatePinnedToCore(clock_task,
                             "ClockTask",

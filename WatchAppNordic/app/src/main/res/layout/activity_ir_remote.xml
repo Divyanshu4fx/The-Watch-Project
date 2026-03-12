@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/black">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="IR_REMOTE_v1.0"
+            app:titleTextColor="@color/terminal_green"
+            app:navigationIconTint="@color/terminal_green" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="[IR_EMITTER_CONTROL]"
+                android:textColor="@color/terminal_green_dark"
+                android:textSize="12sp"
+                android:fontFamily="monospace"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Remote Buttons Grid -->
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="3"
+                android:rowCount="4"
+                android:alignmentMode="alignMargins"
+                android:columnOrderPreserved="false">
+
+                <!-- Power Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPower"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:text="PWR"
+                    android:textColor="@color/terminal_red"
+                    app:strokeColor="@color/terminal_red"
+                    app:cornerRadius="4dp" />
+
+                <Space android:layout_width="0dp" android:layout_height="0dp" android:layout_columnWeight="1" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMute"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:text="MUTE"
+                    app:cornerRadius="4dp" />
+
+                <!-- Vol Up -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnVolUp"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:text="VOL+"
+                    app:cornerRadius="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChUp"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:text="CH+"
+                    app:cornerRadius="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSource"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:text="SRC"
+                    app:cornerRadius="4dp" />
+
+                <!-- Vol Down -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnVolDown"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:text="VOL-"
+                    app:cornerRadius="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChDown"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:text="CH-"
+                    app:cornerRadius="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMenu"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:text="MENU"
+                    app:cornerRadius="4dp" />
+
+            </GridLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="[CUSTOM_COMMAND]"
+                android:textColor="@color/terminal_green_dark"
+                android:textSize="12sp"
+                android:fontFamily="monospace"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="HEX_CODE (e.g. 0x20DF10EF)"
+                app:hintTextColor="@color/terminal_green_dark"
+                app:boxStrokeColor="@color/terminal_green"
+                app:boxStrokeWidth="1dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etCustomHex"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:textColor="@color/terminal_green"
+                    android:inputType="text" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSendCustom"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:text="EXEC_IR_EMIT"
+                android:fontFamily="monospace"
+                app:cornerRadius="4dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDone"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="32dp"
+                android:text="RETURN_TO_HOME"
+                android:fontFamily="monospace"
+                app:strokeColor="@color/terminal_green"
+                app:cornerRadius="4dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

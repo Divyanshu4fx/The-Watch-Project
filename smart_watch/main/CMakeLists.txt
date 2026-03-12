@@ -16,6 +16,8 @@ set(MAIN_SRCS
    "input_mgr/buttons.c"
    "notification/notification.c"
    "find_phone/find_phone.c"
+   "ir_blaster/ir_blaster.c"
+   "ir_blaster/ir_nec_encoder.c"
 #    "ui/vars.c"
 )
 
@@ -29,6 +31,7 @@ set(MAIN_INCLUDE_DIRS
     "input_mgr"
     "notification"
     "find_phone"
+    "ir_blaster"
 )
 
 set(MAIN_REQUIRES
