@@ -3,18 +3,33 @@ package com.divya.watchappnordic
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.health.connect.datatypes.Device
+import android.content.res.ColorStateList
+import android.media.AudioAttributes
+import android.media.Ringtone
+import android.media.RingtoneManager
 import android.os.Bundle
 import android.os.Build
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.util.Log
-import android.widget.Button
+import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import kotlinx.coroutines.delay
+import androidx.core.content.ContextCompat
+import androidx.core.widget.NestedScrollView
+import com.divya.watchappnordic.service.NotificationCatcherService
+import com.divya.watchappnordic.ui.NotificationSettingsActivity
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.button.MaterialButton
 import no.nordicsemi.android.support.v18.scanner.*
 import no.nordicsemi.android.ble.observer.ConnectionObserver
 import java.time.Instant
@@ -22,19 +37,43 @@ import java.time.Instant
 class MainActivity : AppCompatActivity(), ConnectionObserver {
 
     private lateinit var tvStatus: TextView
-    private lateinit var btnScan: Button
-    private lateinit var btnTimeSync: Button
+    private lateinit var scrollStatus: NestedScrollView
+    private lateinit var btnScan: MaterialButton
+    private lateinit var btnTimeSync: MaterialButton
+    private lateinit var btnSetAlarms: MaterialButton
+    private lateinit var btnFindWatch: MaterialButton
+    private lateinit var btnIrRemote: MaterialButton
+    private lateinit var btnNotificationSettings: MaterialButton
+    private lateinit var layoutConnectedFeatures: LinearLayout
+    private lateinit var toolbar: MaterialToolbar
+    
     private val TAG = "BLE_SCANNER"
+    private val PREFS_NAME = "WatchPrefs"
+    private val KEY_DEVICE_ADDR = "saved_device_addr"
+    
+    private var ringtone: Ringtone? = null
+    private var findPhoneDialog: AlertDialog? = null
 
-    private var peripheral: MyBleManager? = null
+    companion object {
+        var peripheral: MyBleManager? = null
+        var isManualLaunch = true // Flag to track if this is the first launch
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        
         tvStatus = findViewById(R.id.tvStatus)
+        scrollStatus = findViewById(R.id.scrollStatus)
         btnScan = findViewById(R.id.btnScan)
         btnTimeSync = findViewById(R.id.btnTimeSync)
+        btnSetAlarms = findViewById(R.id.btnSetAlarms)
+        btnFindWatch = findViewById(R.id.btnFindWatch)
+        btnIrRemote = findViewById(R.id.btnIrRemote)
+        btnNotificationSettings = findViewById(R.id.btnNotificationSettings)
+        layoutConnectedFeatures = findViewById(R.id.layoutConnectedFeatures)
+        toolbar = findViewById(R.id.toolbar)
 
         btnScan.setOnClickListener {
             Log.d(TAG, "Scan button clicked")
@@ -46,141 +85,264 @@ class MainActivity : AppCompatActivity(), ConnectionObserver {
         }
 
         btnTimeSync.setOnClickListener {
-            Log.d(TAG, "Time Sync button clicked")
             val currentUnixTimeSeconds = Instant.now().epochSecond
             peripheral?.syncTime(currentUnixTimeSeconds)
-            Log.d(TAG, "Sending time: $currentUnixTimeSeconds")
+            updateStatus("[RTC] SYNCED TO $currentUnixTimeSeconds")
         }
 
+        btnSetAlarms.setOnClickListener {
+            startActivity(Intent(this, AlarmActivity::class.java))
+        }
 
+        btnFindWatch.setOnClickListener {
+            showFindWatchDialog()
+        }
+
+        btnIrRemote.setOnClickListener {
+            startActivity(Intent(this, IrRemoteActivity::class.java))
+        }
+
+        btnNotificationSettings.setOnClickListener {
+            startActivity(Intent(this, NotificationSettingsActivity::class.java))
+        }
+        
+        setupRingtone()
+        
+        // Auto-connect ONLY if NOT a manual first launch and we have a saved address
+        val savedAddr = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getString(KEY_DEVICE_ADDR, null)
+        if (!isManualLaunch && savedAddr != null && (peripheral == null || !peripheral!!.isConnected)) {
+            updateStatus("[SYSTEM] RECOVERING_CONNECTION: $savedAddr")
+            setButtonDisconnectedState()
+            try {
+                val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(savedAddr)
+                connectToDevice(device)
+            } catch (e: Exception) {
+                updateError("[ERR] RECOVERY_FAILED")
+                setButtonInitialState()
+            }
+        } else if (isManualLaunch) {
+            updateStatus("[SYSTEM] COLD_BOOT_COMPLETE")
+            updateStatus("[SYSTEM] MANUAL_LINK_REQUIRED")
+            isManualLaunch = false // Reset for future background recreations
+        }
+
+        // Re-attach listeners if already connected
+        peripheral?.let {
+            it.setConnectionObserver(this)
+            if (it.isConnected) {
+                onDeviceConnected(it.bluetoothDevice!!)
+            }
+        }
+    }
+
+    private fun updateStatus(message: String) {
+        runOnUiThread {
+            tvStatus.append("\n$message")
+            autoScroll()
+        }
+    }
+
+    private fun updateError(message: String) {
+        runOnUiThread {
+            val spannable = SpannableString("\n$message")
+            spannable.setSpan(
+                ForegroundColorSpan(ContextCompat.getColor(this, R.color.terminal_red)),
+                0, spannable.length,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            tvStatus.append(spannable)
+            autoScroll()
+        }
+    }
+
+    private fun autoScroll() {
+        scrollStatus.post {
+            scrollStatus.fullScroll(View.FOCUS_DOWN)
+        }
+    }
+
+    private fun setupRingtone() {
+        try {
+            val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            ringtone = RingtoneManager.getRingtone(applicationContext, uri)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                ringtone?.audioAttributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to setup ringtone", e)
+        }
+    }
+
+    private fun showFindPhoneDialog() {
+        if (findPhoneDialog?.isShowing == true) return
+        
+        findPhoneDialog = AlertDialog.Builder(this, R.style.TerminalDialogTheme)
+            .setTitle("[PING_RECEIVED]")
+            .setMessage("WATCH IS LOOKING FOR THIS UNIT")
+            .setPositiveButton("ACKNOWLEDGE") { _, _ ->
+                ringtone?.stop()
+            }
+            .setCancelable(false)
+            .create()
+        findPhoneDialog?.show()
+    }
+
+    private fun showFindWatchDialog() {
+        peripheral?.findMyWatch(true)
+        AlertDialog.Builder(this, R.style.TerminalDialogTheme)
+            .setTitle("[UNIT_PING_INITIATED]")
+            .setMessage("M5_WATCH SHOULD BE VIBRATING")
+            .setCancelable(false)
+            .setPositiveButton("TERMINATE") { dialog, _ ->
+                peripheral?.findMyWatch(false)
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun hasPermission(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        } else {
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val permissions = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
         }
+        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        return permissions.all { ActivityCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED }
     }
 
     private fun requestBlePermission() {
-        Log.d(TAG, "Requesting permissions...")
-        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            arrayOf(
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
-        } else {
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        val permissionsList = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissionsList.add(Manifest.permission.BLUETOOTH_SCAN)
+            permissionsList.add(Manifest.permission.BLUETOOTH_CONNECT)
         }
-        ActivityCompat.requestPermissions(this, permissions, 100)
+        permissionsList.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionsList.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        ActivityCompat.requestPermissions(this, permissionsList.toTypedArray(), 100)
     }
 
     private fun startBleScan() {
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
-            tvStatus.text = "Status: Bluetooth is OFF"
-            Log.e(TAG, "Bluetooth is disabled")
+        val adapter = BluetoothAdapter.getDefaultAdapter()
+        if (adapter == null || !adapter.isEnabled) {
+            updateError("[ERR] BLUETOOTH_OFF")
             return
         }
-
-        tvStatus.text = "status: Scanning (Filter: None)..."
-        Log.d(TAG, "Starting scan with no filters...")
-
-        val settings = ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-            .setReportDelay(0)
-            .build()
-
-        // Empty filters list to find ALL nearby devices
-        val filters = listOf(
-            ScanFilter.Builder()
-                .setDeviceName("M5_Watch")
-                .build()
-        )
-
-        val scanner = BluetoothLeScannerCompat.getScanner()
-        scanner.startScan(filters, settings, scanCallback)
+        updateStatus("[SCAN] SEARCHING FOR M5_WATCH...")
+        val filters = listOf(ScanFilter.Builder().setDeviceName("M5_Watch").build())
+        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+        BluetoothLeScannerCompat.getScanner().startScan(filters, settings, scanCallback)
     }
 
     private val scanCallback = object : ScanCallback() {
         @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val deviceName = result.device.name ?: "Unknown"
-            val deviceAddress = result.device.address
-            val rssi = result.rssi
-
-            Log.d(TAG, "Found: $deviceName ($deviceAddress) RSSI: $rssi")
-            tvStatus.text = "Status: Found $deviceName"
-            tvStatus.text = "Connecting to $deviceName"
-            val scanner = BluetoothLeScannerCompat.getScanner()
-            scanner.stopScan(this)
-
+            BluetoothLeScannerCompat.getScanner().stopScan(this)
+            updateStatus("[LINK] TARGET FOUND: ${result.device.address}\n[LINK] INITIATING HANDSHAKE...")
             connectToDevice(result.device)
         }
-
         override fun onScanFailed(errorCode: Int) {
-            Log.e(TAG, "Scan Failed with error code: $errorCode")
-            tvStatus.text = "Status: Scan Failed ($errorCode)"
+            updateError("[ERR] SCAN_FAILED_CODE_$errorCode")
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        // Stop scanning when activity is not visible to save battery
-        BluetoothLeScannerCompat.getScanner().stopScan(scanCallback)
     }
 
     private fun connectToDevice(device: BluetoothDevice) {
-        peripheral?.close()
-
-        peripheral = MyBleManager(context = this)
-
-        peripheral?.let { manager ->
-            manager.setConnectionObserver(this)
-            manager.connect(device)
-                .useAutoConnect(false)
-                .retry(3, 100)
-                .done { connectedDevice -> Log.d(TAG, "Connected to device: ${connectedDevice?.address}")
-                                           runOnUiThread { tvStatus.text = "Status Connected to ${connectedDevice?.address}" }
-                 }
-            .fail { failedDevice, status -> Log.e(TAG, "Connection failed for device: $status")
-                                            runOnUiThread { tvStatus.text = "Status: Connection Failed $status" } }
-                .enqueue()
+        if (peripheral?.bluetoothDevice?.address == device.address && peripheral?.isConnected == true) {
+            return
         }
 
+        peripheral?.close()
+        peripheral = MyBleManager(this).apply {
+            setConnectionObserver(this@MainActivity)
+            onFindPhoneRequested = { start ->
+                if (getSharedPreferences("NotificationSettings", Context.MODE_PRIVATE).getBoolean("find_phone_enabled", true)) {
+                    runOnUiThread { 
+                        if (start) { 
+                            Log.d(TAG, "Starting phone ringing")
+                            ringtone?.play()
+                            showFindPhoneDialog() 
+                        } else { 
+                            Log.d(TAG, "Stopping phone ringing")
+                            ringtone?.stop() 
+                            findPhoneDialog?.dismiss()
+                        } 
+                    }
+                }
+            }
+            connect(device)
+                .retry(5, 500)
+                .useAutoConnect(true)
+                .enqueue()
+        }
+    }
+
+    private fun setButtonInitialState() {
+        btnScan.text = "INIT_SCAN"
+        btnScan.setTextColor(ContextCompat.getColor(this, R.color.terminal_green))
+        btnScan.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.terminal_green))
+    }
+
+    private fun setButtonDisconnectedState() {
+        btnScan.text = "RECONNECTING..."
+        btnScan.setTextColor(ContextCompat.getColor(this, R.color.terminal_red))
+        btnScan.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.terminal_red))
     }
 
     override fun onDeviceConnecting(device: BluetoothDevice) {
-    Log.d(TAG, "Connecting to: ${device.address}")
+        updateStatus("[LINK] CONNECTING TO ${device.address}...")
     }
 
     override fun onDeviceConnected(device: BluetoothDevice) {
-        Log.d(TAG, "Connected to: ${device.address}")
-        runOnUiThread { tvStatus.text = "Status: Connected to ${device.address}(M5_Watch)"
-                        btnTimeSync.isEnabled = true // Enable Button when connected
+        runOnUiThread {
+            toolbar.subtitle = "STATUS: CONNECTED"
+            updateStatus("[LINK] SECURE_CONNECTION_ESTABLISHED\n[LINK] ADDR: ${device.address}")
+            layoutConnectedFeatures.visibility = View.VISIBLE
+            btnScan.visibility = View.GONE
+            
+            getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_DEVICE_ADDR, device.address)
+                .apply()
+                
+            NotificationCatcherService.updateStatus(this, true)
+        }
+    }
+
+    override fun onDeviceDisconnected(device: BluetoothDevice, reason: Int) {
+        runOnUiThread {
+            toolbar.subtitle = "STATUS: DISCONNECTED"
+            layoutConnectedFeatures.visibility = View.GONE
+            btnScan.visibility = View.VISIBLE
+            setButtonDisconnectedState()
+
+            if (reason == ConnectionObserver.REASON_LINK_LOSS) {
+                updateError("[SYSTEM] LINK_LOSS_DETECTED")
+                updateStatus("[SYSTEM] WAITING_FOR_REAPPEARANCE...")
+            } else {
+                updateStatus("[SYSTEM] CONNECTION_TERMINATED\n[SYSTEM] REASON_CODE_$reason")
+            }
+            
+            NotificationCatcherService.updateStatus(this, false)
         }
     }
 
     override fun onDeviceFailedToConnect(device: BluetoothDevice, reason: Int) {
-        Log.e("BLE_APP", "Failed to connect to: ${device.address}, Reason: $reason")
-    }
-
-    override fun onDeviceReady(device: BluetoothDevice) {
-        Log.d("BLE_APP", "Device ready: ${device.address}")
-    }
-
-    override fun onDeviceDisconnecting(device: BluetoothDevice) {
-        Log.d("BLE_APP", "Disconnecting from: ${device.address}")
-    }
-
-    override fun onDeviceDisconnected(device: BluetoothDevice, reason: Int) {
-        Log.d("BLE_APP", "Device disconnected: ${device.address}, Reason: $reason")
-        runOnUiThread { tvStatus.text = "Status: Disconnected"
-                        btnTimeSync.isEnabled = false // Disable Button when disconnected
+        runOnUiThread { 
+            updateError("[ERR] HANDSHAKE_FAILED_$reason")
+            setButtonDisconnectedState()
+            if (reason == -1) {
+                updateStatus("[SYSTEM] RE-INITIALIZING_STACK...")
+                peripheral?.close()
+            }
         }
     }
+    
+    override fun onDeviceReady(device: BluetoothDevice) {
+        runOnUiThread { updateStatus("[SYSTEM] REMOTE_CORE_READY") }
+    }
+    override fun onDeviceDisconnecting(device: BluetoothDevice) {}
 }

@@ -1,12 +1,11 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "com.divya.watchappnordic"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.divya.watchappnordic"
@@ -31,6 +30,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
 }
 
 dependencies {
@@ -41,6 +43,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation("no.nordicsemi.android.support.v18:scanner:1.6.0")
     implementation("no.nordicsemi.android:ble:2.6.1")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.core.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

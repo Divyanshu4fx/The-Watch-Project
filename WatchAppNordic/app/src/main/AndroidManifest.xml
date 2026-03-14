@@ -14,6 +14,11 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- Notification Forwarding permissions -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -23,6 +28,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WatchAppNordic">
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -31,6 +37,39 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".AlarmActivity"
+            android:label="Set Alarms"
+            android:parentActivityName=".MainActivity"
+            android:exported="false">
+        </activity>
+
+        <activity
+            android:name=".IrRemoteActivity"
+            android:label="IR Remote"
+            android:parentActivityName=".MainActivity"
+            android:exported="false">
+        </activity>
+
+        <activity
+            android:name=".ui.NotificationSettingsActivity"
+            android:label="Notification Settings"
+            android:parentActivityName=".MainActivity"
+            android:exported="false">
+        </activity>
+
+        <service
+            android:name=".service.NotificationCatcherService"
+            android:label="Watch Notification Forwarder"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:foregroundServiceType="connectedDevice"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>

@@ -2,7 +2,6 @@ package com.divya.watchappnordic.ui
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
@@ -34,6 +33,7 @@ class NotificationSettingsActivity : AppCompatActivity() {
 
         val switchForwarding = findViewById<SwitchMaterial>(R.id.switchForwarding)
         val switchDnd = findViewById<SwitchMaterial>(R.id.switchDnd)
+        val switchFindPhone = findViewById<SwitchMaterial>(R.id.switchFindPhone)
         val btnPermission = findViewById<Button>(R.id.btnPermission)
         val rvApps = findViewById<RecyclerView>(R.id.rvApps)
 
@@ -41,6 +41,7 @@ class NotificationSettingsActivity : AppCompatActivity() {
         
         switchForwarding.isChecked = prefs.getBoolean("forwarding_enabled", true)
         switchDnd.isChecked = prefs.getBoolean("dnd_enabled", false)
+        switchFindPhone.isChecked = prefs.getBoolean("find_phone_enabled", true)
 
         switchForwarding.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("forwarding_enabled", isChecked).apply()
@@ -48,6 +49,10 @@ class NotificationSettingsActivity : AppCompatActivity() {
 
         switchDnd.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("dnd_enabled", isChecked).apply()
+        }
+
+        switchFindPhone.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("find_phone_enabled", isChecked).apply()
         }
 
         btnPermission.setOnClickListener {

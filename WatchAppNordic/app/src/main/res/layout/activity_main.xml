@@ -1,30 +1,158 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center">
+    android:background="@color/black"
+    android:fitsSystemWindows="true">
 
-    <Button
-        android:id="@+id/btnScan"
-        android:layout_width="wrap_content"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start Scan"/>
+        android:background="@color/black">
 
-    <Button
-        android:id="@+id/btnTimeSync"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Sync Time"
-        android:enabled="false"/>
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="M5_WATCH_OS"
+            app:titleTextColor="@color/terminal_green"
+            app:subtitle="STATUS: IDLE"
+            app:subtitleTextColor="@color/terminal_green_dark" />
 
+    </com.google.android.material.appbar.AppBarLayout>
 
-    <TextView
-        android:id="@+id/tvStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Status: Ready"
-        android:textSize="18sp"/>
-</LinearLayout>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="24dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- Terminal Box: Explicitly constrained between top and buttons -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/terminalBox"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/black"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/terminal_green_dark"
+            app:strokeWidth="1dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/bottomActionArea"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/scrollStatus"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="12dp"
+                android:scrollbars="vertical"
+                android:fadeScrollbars="false"
+                android:scrollbarThumbVertical="@color/terminal_green"
+                android:scrollbarStyle="outsideOverlay">
+
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="[SYSTEM] READY TO CONNECT\n[SYSTEM] WAITING FOR INPUT..."
+                    android:fontFamily="monospace"
+                    android:textColor="@color/terminal_green"
+                    android:textSize="14sp" />
+            </androidx.core.widget.NestedScrollView>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Bottom Action Area: Always pinned to the bottom -->
+        <FrameLayout
+            android:id="@+id/bottomActionArea"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- Initial Scan Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnScan"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:text="INIT_SCAN"
+                android:fontFamily="monospace"
+                android:textSize="16sp"
+                android:textColor="@color/terminal_green"
+                app:strokeColor="@color/terminal_green"
+                app:strokeWidth="2dp"
+                app:cornerRadius="4dp" />
+
+            <!-- Connected Features Panel -->
+            <LinearLayout
+                android:id="@+id/layoutConnectedFeatures"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="[REMOTE_PROTOCOL_ACTIVE]"
+                    android:textColor="@color/terminal_green_dark"
+                    android:textSize="12sp"
+                    android:fontFamily="monospace"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnTimeSync"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="RTC_SYNC"
+                    android:layout_marginBottom="8dp"
+                    app:cornerRadius="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSetAlarms"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="ALARM_MODULE"
+                    android:layout_marginBottom="8dp"
+                    app:cornerRadius="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnNotificationSettings"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="NOTIF_BRIDGE"
+                    android:layout_marginBottom="8dp"
+                    app:cornerRadius="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnIrRemote"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="IR_REMOTE_CONSOLE"
+                    android:layout_marginBottom="8dp"
+                    app:cornerRadius="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFindWatch"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="PING_PERIPHERAL"
+                    app:cornerRadius="4dp" />
+
+            </LinearLayout>
+        </FrameLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

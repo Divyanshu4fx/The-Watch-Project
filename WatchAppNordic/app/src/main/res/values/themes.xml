@@ -1,9 +1,36 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.WatchAppNordic" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Theme.WatchAppNordic" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/terminal_green</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorPrimaryContainer">@color/terminal_green_dark</item>
+        <item name="colorOnPrimaryContainer">@color/black</item>
+
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/terminal_green</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Background and Surface -->
+        <item name="android:windowBackground">@color/terminal_bg</item>
+        <item name="colorSurface">@color/terminal_bg</item>
+        <item name="colorOnSurface">@color/terminal_green</item>
+        <item name="colorSurfaceVariant">@color/terminal_card</item>
+        <item name="colorOnSurfaceVariant">@color/terminal_green</item>
+
+        <!-- Typography -->
+        <item name="android:textColor">@color/terminal_green</item>
+        <item name="android:textColorSecondary">@color/terminal_green_dark</item>
+
+        <item name="android:fontFamily">monospace</item>
+        <item name="alertDialogTheme">@style/TerminalDialogTheme</item>
     </style>
 
-    <style name="Theme.WatchAppNordic" parent="Base.Theme.WatchAppNordic" />
+    <style name="TerminalDialogTheme" parent="Theme.Material3.DayNight.Dialog">
+        <item name="colorSurface">@color/black</item>
+        <item name="colorOnSurface">@color/terminal_green</item>
+        <item name="android:textColor">@color/terminal_green</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
 </resources>
