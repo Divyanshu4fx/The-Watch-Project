@@ -38,6 +38,42 @@ static const ble_uuid128_t irRemote_char_uuid =
     BLE_UUID128_INIT(0x33, 0x06, 0x4b, 0xb2, 0x1d, 0xb2, 0x48, 0x63,
                      0x9a, 0xc1, 0xe1, 0x1c, 0x58, 0x1e, 0xf2, 0x4f);
 
+static const ble_uuid128_t color_char_uuid =
+    BLE_UUID128_INIT(0xc9, 0x2d, 0xdd, 0xec, 0x9c, 0x55, 0x44, 0x67,
+                     0xb4, 0x7a, 0x15, 0xeb, 0x10, 0x0f, 0x48, 0x84);
+
+static int color_write_handler(uint16_t conn_handle,
+                               uint16_t attr_handle,
+                               struct ble_gatt_access_ctxt *ctxt,
+                               void *arg)
+{
+    if (ctxt->op != BLE_GATT_ACCESS_OP_WRITE_CHR)
+        return 0;
+
+    uint16_t len = OS_MBUF_PKTLEN(ctxt->om);
+
+    // The app sends exactly 3 bytes [R, G, B]
+    if (len != 3)
+    {
+        ESP_LOGW(TAG, "Invalid color length: expected 3 bytes, got %d", len);
+        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+    }
+
+    uint8_t rgb_bytes[3];
+    os_mbuf_copydata(ctxt->om, 0, 3, rgb_bytes);
+
+    // Convert [0x41, 0xFF, 0x00] into 0x41FF00
+    // Byte 0 is Red, Byte 1 is Green, Byte 2 is Blue
+    uint32_t rgb_24 = (rgb_bytes[0] << 16) | (rgb_bytes[1] << 8) | (rgb_bytes[2]);
+
+    ESP_LOGI(TAG, "Hex received: 0x%06X", (unsigned int)rgb_24);
+
+    // Call your apply function with the raw hex
+    apply_theme_color(rgb_24);
+
+    return 0;
+}
+
 static void notify_alarm_to_app(const myalarm_t *alarm)
 {
     if (!ble_connected)
@@ -253,21 +289,20 @@ void ble_notify_find_phone(uint8_t value)
 
 static int ir_remote_access_cb(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
-    ESP_LOGI(TAG,"IR command callback");
+    ESP_LOGI(TAG, "IR command callback");
     if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR)
     {
         int len = ctxt->om->om_len;
         // uint64_t command = ctxt->om->om_data[0];
         uint32_t command = 0;
-        for(int i = 1; i < len ; i++)
+        for (int i = 1; i < len; i++)
         {
             command = (command << 8) | ctxt->om->om_data[i];
         }
 
-        ESP_LOGI(TAG,"IR command received %llx",(unsigned long long)command);
+        ESP_LOGI(TAG, "IR command received %llx", (unsigned long long)command);
 
         execute_ir_command(command);
-
     }
     return 0;
 }
@@ -304,9 +339,15 @@ static const struct ble_gatt_svc_def gatt_svcs[] = {
                 .val_handle = &find_phone_notify_handle,
                 .flags = BLE_GATT_CHR_F_NOTIFY,
             },
-            {.uuid = &irRemote_char_uuid.u,
-             .access_cb = ir_remote_access_cb,
-             .flags = BLE_GATT_CHR_F_WRITE,
+            {
+                .uuid = &irRemote_char_uuid.u,
+                .access_cb = ir_remote_access_cb,
+                .flags = BLE_GATT_CHR_F_WRITE,
+            },
+            {
+                .uuid = &color_char_uuid.u,
+                .access_cb = color_write_handler,
+                .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP,
             },
             {0}},
     },

@@ -46,10 +46,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="FORWARDING_ACTIVE"
-                android:fontFamily="monospace"
-                android:textColor="@color/terminal_green"
-                app:thumbTint="@color/terminal_green"
-                app:trackTint="@color/terminal_green_dark" />
+                android:fontFamily="monospace" />
 
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/switchDnd"
@@ -57,10 +54,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="SILENT_MODE (DND)"
-                android:fontFamily="monospace"
-                android:textColor="@color/terminal_green"
-                app:thumbTint="@color/terminal_green"
-                app:trackTint="@color/terminal_green_dark" />
+                android:fontFamily="monospace" />
 
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/switchFindPhone"
@@ -68,10 +62,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="REVERSE_PING_ENABLED"
-                android:fontFamily="monospace"
-                android:textColor="@color/terminal_green"
-                app:thumbTint="@color/terminal_green"
-                app:trackTint="@color/terminal_green_dark" />
+                android:fontFamily="monospace" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -96,9 +87,7 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="32dp"
                 android:text="GRANT_OS_ACCESS"
-                android:fontFamily="monospace"
-                app:strokeColor="@color/terminal_green"
-                app:cornerRadius="4dp" />
+                android:fontFamily="monospace" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

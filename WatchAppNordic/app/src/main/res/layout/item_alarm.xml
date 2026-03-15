@@ -8,7 +8,6 @@
     app:cardCornerRadius="4dp"
     app:cardElevation="0dp"
     app:strokeWidth="1dp"
-    app:strokeColor="@color/terminal_green_dark"
     app:cardBackgroundColor="@color/terminal_card">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -23,7 +22,6 @@
             android:text="08:00"
             android:textSize="32sp"
             android:fontFamily="monospace"
-            android:textColor="@color/terminal_green"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -34,7 +32,6 @@
             android:text="Wake up!"
             android:textSize="14sp"
             android:fontFamily="monospace"
-            android:textColor="@color/terminal_green_dark"
             android:layout_marginTop="4dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvTime"
@@ -44,8 +41,6 @@
             android:id="@+id/switchAlarm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:thumbTint="@color/terminal_green"
-            app:trackTint="@color/terminal_green_dark"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

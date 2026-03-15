@@ -151,24 +151,42 @@ void input_event_callback(button_id_t btn_id, button_event_t event)
         }
         else if (event == BTN_EVENT_LONG_CLICK)
         {
-            ESP_LOGI(TAG, "Button A Long Pressed");
-            dismiss_alarm();
-            // Insert explicit device sleep or sync logic here
-            if (!(alarm_popup_enabled))
+            ESP_LOGI(TAG, "Button A Long Pressed - Cycling Screen");
+
+            if (alarm_popup_enabled)
             {
-                if (find_phone_screen_active)
-                {
-                    hide_find_phone_screen();
-                }
-                else if (notification_screen_active)
-                {
-                    hide_notification_screen();
-                }
-                else
-                {
-                    show_find_phone_screen();
-                    // show_notification_screen();
-                }
+                dismiss_alarm();
+                return;
+            }
+
+            switch (current_app_screen)
+            {
+            case SCREEN_FIND_PHONE:
+                hide_find_phone_screen();
+                break;
+            case SCREEN_NOTIFICATIONS:
+                hide_notification_screen();
+                break;
+            default:
+                break;
+            }
+
+            current_app_screen = (current_app_screen + 1) % SCREEN_MAX;
+
+            switch (current_app_screen)
+            {
+            case SCREEN_WATCHFACE:
+                ESP_LOGI(TAG, "Switched to Watchface");
+                break;
+            case SCREEN_FIND_PHONE:
+                ESP_LOGI(TAG, "Switched to Find Phone");
+                show_find_phone_screen();
+                break;
+            case SCREEN_NOTIFICATIONS:
+                ESP_LOGI(TAG, "Switched to Notifications");
+                show_notification_screen();
+            case SCREEN_MAX:
+                break;
             }
         }
         break;

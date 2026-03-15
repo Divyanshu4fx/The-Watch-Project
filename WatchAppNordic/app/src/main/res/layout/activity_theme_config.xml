@@ -111,9 +111,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:text="SYNC_FACE_COLOR"
-                android:fontFamily="monospace"
-                app:strokeColor="@color/terminal_green"
-                app:cornerRadius="4dp" />
+                android:fontFamily="monospace" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDone"
@@ -122,9 +120,7 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="16dp"
                 android:text="RETURN_TO_CONSOLE"
-                android:fontFamily="monospace"
-                app:strokeColor="@color/terminal_green"
-                app:cornerRadius="4dp" />
+                android:fontFamily="monospace" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

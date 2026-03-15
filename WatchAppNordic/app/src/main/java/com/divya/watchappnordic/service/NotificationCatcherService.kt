@@ -68,7 +68,7 @@ class NotificationCatcherService : NotificationListenerService() {
             .setContentIntent(contentIntent)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setColor(0x41FF00) // Terminal Green
+            .setColor(0x41ff00) // Terminal Green
             .build()
     }
 

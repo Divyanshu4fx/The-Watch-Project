@@ -26,6 +26,7 @@ typedef struct _objects_t {
     lv_obj_t *date_label;
     lv_obj_t *week_label;
     lv_obj_t *alarm_icon;
+    lv_obj_t *message_icon;
     lv_obj_t *alarm_container;
     lv_obj_t *alarm_icon2;
     lv_obj_t *obj1;

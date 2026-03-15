@@ -83,11 +83,7 @@
                 android:layout_height="64dp"
                 android:text="INIT_SCAN"
                 android:fontFamily="monospace"
-                android:textSize="16sp"
-                android:textColor="@color/terminal_green"
-                app:strokeColor="@color/terminal_green"
-                app:strokeWidth="2dp"
-                app:cornerRadius="4dp" />
+                android:textSize="16sp" />
 
             <!-- Connected Features Panel -->
             <LinearLayout
@@ -139,6 +135,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:text="IR_REMOTE_CONSOLE"
+                    android:layout_marginBottom="8dp"
+                    app:cornerRadius="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnThemeConfig"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="THEME_CONFIG"
                     android:layout_marginBottom="8dp"
                     app:cornerRadius="4dp" />
 

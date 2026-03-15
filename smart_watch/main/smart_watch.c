@@ -51,9 +51,10 @@ static const char *TAG = "APP_MAIN";
 volatile bool screen_on = true;
 volatile uint32_t last_activity_time = 0;
 bool alarm_popup_enabled = false;
-
+uint32_t current_theme_color = 0xff41ff00;
 
 void enable_alarm_popup(uint8_t hour, uint8_t minute, char *message);
+void load_theme_colour(void);
 
 static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
@@ -181,6 +182,7 @@ void clock_task(void *pvParameters)
     // add_notification("Instagram", "New follower", "techguru42 started following you.", 8, 30);
     // add_notification("Phone", "Missed Call", "Missed call from Mom at 7:55 AM", 7, 55);
     // enable_alarm_popup(12, 0, "Testing");
+    load_theme_colour();
     while (1)
     {
         uint32_t current_time = esp_log_timestamp();
@@ -262,6 +264,15 @@ void clock_task(void *pvParameters)
                 else
                 {
                     lv_obj_add_flag(objects.alarm_icon, LV_OBJ_FLAG_HIDDEN); // Hide it
+                }
+
+                if(notification_count > 0)
+                {
+                    lv_obj_clear_flag(objects.message_icon, LV_OBJ_FLAG_HIDDEN);
+                }
+                else
+                {
+                    lv_obj_add_flag(objects.message_icon, LV_OBJ_FLAG_HIDDEN);
                 }
                 char buf[5];
                 snprintf(buf, sizeof(buf), "%d%%", get_battery_percent());
@@ -386,4 +397,55 @@ void disable_alarm_popup()
     lv_obj_add_flag(objects.alarm_container, LV_OBJ_FLAG_HIDDEN);
 
     alarm_popup_enabled = false;
+}
+
+void apply_theme_color(uint32_t color_hex)
+{
+    // Convert the hex once to save processing cycles
+    lv_color_t theme_color = lv_color_hex(color_hex);
+
+    // Apply to all UI elements
+    // Time label
+    lv_obj_set_style_text_color(objects.time_lable, theme_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    // Top bar background
+    lv_obj_set_style_bg_color(objects.top_bar, theme_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    // Date and week labels
+    lv_obj_set_style_text_color(objects.date_label, theme_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(objects.week_label, theme_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    // Alarm icon recolor - CRITICAL: Must set opacity for recolor to take effect
+    // lv_obj_set_style_img_recolor(objects.alarm_icon, theme_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    // lv_obj_set_style_img_recolor_opa(objects.alarm_icon, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    // Alarm container border
+    lv_obj_set_style_border_color(objects.alarm_container, theme_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    // Save to NVS
+    nvs_handle_t nvs_h;
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs_h);
+    if (err == ESP_OK)
+    {
+        // Store the raw hex (e.g., 0x00FF00) so it's easy to read back
+        nvs_set_u32(nvs_h, "theme_color", color_hex);
+        nvs_commit(nvs_h);
+        nvs_close(nvs_h);
+        ESP_LOGI(TAG, "Theme color 0x%06X saved to NVS", (unsigned int)color_hex);
+    }
+}
+
+void load_theme_colour(void)
+{
+    nvs_handle_t nvs_h;
+    if (nvs_open("storage", NVS_READONLY, &nvs_h) == ESP_OK)
+    {
+        uint32_t saved_color;
+        if (nvs_get_u32(nvs_h, "theme_color", &saved_color) == ESP_OK)
+        {
+            apply_theme_color(saved_color);
+            ESP_LOGI(TAG, "Loaded theme color from NVS: 0x%08lx", saved_color);
+        }
+        nvs_close(nvs_h);
+    }
 }

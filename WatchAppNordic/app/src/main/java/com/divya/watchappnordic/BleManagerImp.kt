@@ -17,9 +17,10 @@ class MyBleManager(context: Context) : BleManager(context) {
         val FIND_WATCH_CHAR_UUID: UUID = UUID.fromString("3e6e06ea-8e05-7195-794b-5d3dad032e87")
         val NOTIF_CHAR_UUID: UUID = UUID.fromString("56dcbe22-a23d-51af-7940-1d1a2dbcdc15")
         val FIND_PHONE_CHAR_UUID: UUID = UUID.fromString("c568a991-7b46-20b6-f746-fbdc7310da00")
-        
-        // IR Remote Characteristic
         val IR_CHAR_UUID: UUID = UUID.fromString("4ff21e58-1ce1-c19a-6348-b21db24b0633")
+        
+        // Color/Face Theme Characteristic
+        val COLOR_CHAR_UUID: UUID = UUID.fromString("84480f10-eb15-7ab4-6744-559cecdd2dc9")
     }
 
     private var timeCharacteristic: BluetoothGattCharacteristic? = null
@@ -28,6 +29,7 @@ class MyBleManager(context: Context) : BleManager(context) {
     private var notificationCharacteristic: BluetoothGattCharacteristic? = null
     private var findPhoneCharacteristic: BluetoothGattCharacteristic? = null
     private var irCharacteristic: BluetoothGattCharacteristic? = null
+    private var colorCharacteristic: BluetoothGattCharacteristic? = null
 
     var onAlarmReceived: ((Int, Int, Int, String, Boolean) -> Unit)? = null
     var onFindPhoneRequested: ((Boolean) -> Unit)? = null
@@ -41,9 +43,10 @@ class MyBleManager(context: Context) : BleManager(context) {
             findPhoneCharacteristic = service.getCharacteristic(FIND_PHONE_CHAR_UUID)
             notificationCharacteristic = service.getCharacteristic(NOTIF_CHAR_UUID)
             irCharacteristic = service.getCharacteristic(IR_CHAR_UUID)
+            colorCharacteristic = service.getCharacteristic(COLOR_CHAR_UUID)
         }
         
-        Log.d(tag, "Service Discovery: Time=${timeCharacteristic != null}, Alarm=${alarmCharacteristic != null}, FindWatch=${findWatchCharacteristic != null}, Notif=${notificationCharacteristic != null}, FindPhone=${findPhoneCharacteristic != null}, IR=${irCharacteristic != null}")
+        Log.d(tag, "Service Discovery: Time=${timeCharacteristic != null}, Alarm=${alarmCharacteristic != null}, FindWatch=${findWatchCharacteristic != null}, Notif=${notificationCharacteristic != null}, FindPhone=${findPhoneCharacteristic != null}, IR=${irCharacteristic != null}, Color=${colorCharacteristic != null}")
         return timeCharacteristic != null
     }
 
@@ -79,6 +82,7 @@ class MyBleManager(context: Context) : BleManager(context) {
         notificationCharacteristic = null
         findPhoneCharacteristic = null
         irCharacteristic = null
+        colorCharacteristic = null
     }
 
     fun syncTime(unixTimeSeconds: Long) {
@@ -122,6 +126,16 @@ class MyBleManager(context: Context) : BleManager(context) {
             data[2] = (hexCode shr 16 and 0xFF).toByte()
             data[3] = (hexCode shr 8 and 0xFF).toByte()
             data[4] = (hexCode and 0xFF).toByte()
+            writeCharacteristic(char, data, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT).enqueue()
+        }
+    }
+
+    fun sendColor(color: Int) {
+        colorCharacteristic?.let { char ->
+            val data = ByteArray(3)
+            data[0] = (color shr 16 and 0xFF).toByte() // R
+            data[1] = (color shr 8 and 0xFF).toByte()  // G
+            data[2] = (color and 0xFF).toByte()         // B
             writeCharacteristic(char, data, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT).enqueue()
         }
     }

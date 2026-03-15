@@ -15,6 +15,7 @@
     "ui_image_alarm_icon.c",
     "ui_image_battery_icon.c",
     "ui_image_bluetooth_ico.c",
+    "ui_image_message_icon.c",
     "vars.h"
   ]
 }

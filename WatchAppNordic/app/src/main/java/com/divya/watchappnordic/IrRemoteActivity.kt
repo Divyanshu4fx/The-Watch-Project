@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.divya.watchappnordic.util.ThemeHelper
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.gson.Gson
@@ -31,14 +32,19 @@ class IrRemoteActivity : AppCompatActivity() {
     private val gson = Gson()
     private val PREFS_NAME = "IrPrefs"
     private val KEY_CUSTOM_BUTTONS = "custom_buttons"
+    private var activeThemeColor: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        activeThemeColor = ThemeHelper.getThemeColor(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ir_remote)
 
         val toolbar = findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        // Apply theme immediately after loading views
+        ThemeHelper.applyThemeToActivity(this)
 
         tvLastCommand = findViewById(R.id.tvLastCommand)
         rvCustomButtons = findViewById(R.id.rvCustomButtons)
@@ -74,7 +80,7 @@ class IrRemoteActivity : AppCompatActivity() {
                 customButtons.removeAt(position)
                 adapter.notifyItemRemoved(position)
                 saveCustomButtons()
-                Toast.makeText(this@IrRemoteActivity, "COMMAND_DELETED", Toast.LENGTH_SHORT).show()
+                tvLastCommand.text = "[OP] COMMAND_DELETED"
             }
         })
         itemTouchHelper.attachToRecyclerView(rvCustomButtons)
@@ -125,7 +131,7 @@ class IrRemoteActivity : AppCompatActivity() {
         val etHex = view.findViewById<TextInputEditText>(R.id.etHex)
         etHex.setText("0x")
 
-        AlertDialog.Builder(this, R.style.TerminalDialogTheme)
+        val dialog = AlertDialog.Builder(this, R.style.TerminalDialogTheme)
             .setTitle("[ADD_REMOTE_MODULE]")
             .setView(view)
             .setPositiveButton("SAVE") { _, _ ->
@@ -139,11 +145,16 @@ class IrRemoteActivity : AppCompatActivity() {
                         saveCustomButtons()
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(this, "INVALID_HEX_DATA", Toast.LENGTH_SHORT).show()
+                    tvLastCommand.text = "[ERR] INVALID_HEX_DATA"
                 }
             }
             .setNegativeButton("CANCEL", null)
-            .show()
+            .create()
+            
+        dialog.show()
+        ThemeHelper.applyTheme(view, activeThemeColor)
+        // Also apply theme to dialog window views
+        dialog.window?.decorView?.let { ThemeHelper.applyTheme(it, activeThemeColor) }
     }
 
     private fun setupButton(id: Int, protocol: Int, hexCode: Long) {
@@ -198,6 +209,7 @@ class IrRemoteActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = items[position]
             holder.btn.text = item.label
+            ThemeHelper.applyTheme(holder.itemView, activeThemeColor)
             holder.btn.setOnClickListener { sendIr(1, item.hexCode) }
         }
         override fun getItemCount() = items.size

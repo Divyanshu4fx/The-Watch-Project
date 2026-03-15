@@ -53,6 +53,13 @@
         </activity>
 
         <activity
+            android:name=".ThemeConfigActivity"
+            android:label="Theme Configuration"
+            android:parentActivityName=".MainActivity"
+            android:exported="false">
+        </activity>
+
+        <activity
             android:name=".ui.NotificationSettingsActivity"
             android:label="Notification Settings"
             android:parentActivityName=".MainActivity"

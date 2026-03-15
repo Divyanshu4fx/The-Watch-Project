@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.divya.watchappnordic.R
+import com.divya.watchappnordic.util.ThemeHelper
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 
@@ -22,14 +23,19 @@ class NotificationSettingsActivity : AppCompatActivity() {
 
     private lateinit var adapter: AppAdapter
     private val installedApps = mutableListOf<AppInfo>()
+    private var activeThemeColor: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        activeThemeColor = ThemeHelper.getThemeColor(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notification_settings)
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        // Apply theme immediately
+        ThemeHelper.applyThemeToActivity(this)
 
         val switchForwarding = findViewById<SwitchMaterial>(R.id.switchForwarding)
         val switchDnd = findViewById<SwitchMaterial>(R.id.switchDnd)
@@ -105,7 +111,11 @@ class NotificationSettingsActivity : AppCompatActivity() {
             val app = apps[position]
             holder.name.text = app.name
             holder.icon.setImageDrawable(app.icon)
+            // Tag the icon to prevent theme tinting
+            holder.icon.tag = ThemeHelper.TAG_KEEP_COLOR
             
+            ThemeHelper.applyTheme(holder.itemView, activeThemeColor)
+
             val allowedApps = prefs.getStringSet("allowed_apps", mutableSetOf()) ?: mutableSetOf()
             holder.switch.isChecked = allowedApps.contains(app.packageName)
 

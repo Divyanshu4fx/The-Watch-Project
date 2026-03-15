@@ -72,7 +72,7 @@ void create_screen_main() {
             // bluetooth_icon
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.bluetooth_icon = obj;
-            lv_obj_set_pos(obj, -29, -35);
+            lv_obj_set_pos(obj, -40, -35);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_set_src(obj, &img_bluetooth_ico);
             lv_img_set_zoom(obj, 60);
@@ -125,11 +125,23 @@ void create_screen_main() {
             // alarm_icon
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.alarm_icon = obj;
-            lv_obj_set_pos(obj, 38, 5);
+            lv_obj_set_pos(obj, 25, 5);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_set_src(obj, &img_alarm_icon);
             lv_img_set_pivot(obj, 0, 0);
             lv_img_set_zoom(obj, 50);
+            lv_obj_set_style_img_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_img_recolor(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_img_recolor_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // message_icon
+            lv_obj_t *obj = lv_img_create(parent_obj);
+            objects.message_icon = obj;
+            lv_obj_set_pos(obj, 15, -35);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_img_set_src(obj, &img_message_icon);
+            lv_img_set_zoom(obj, 70);
             lv_obj_set_style_img_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_img_recolor(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_img_recolor_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);

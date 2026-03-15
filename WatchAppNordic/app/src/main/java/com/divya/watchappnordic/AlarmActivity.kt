@@ -12,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.divya.watchappnordic.util.ThemeHelper
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.switchmaterial.SwitchMaterial
@@ -33,8 +34,10 @@ class AlarmActivity : AppCompatActivity() {
     private val alarms = mutableListOf<Alarm>()
     private lateinit var adapter: AlarmAdapter
     private val MAX_ALARMS = 5
+    private var activeThemeColor: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        activeThemeColor = ThemeHelper.getThemeColor(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_alarm)
 
@@ -42,6 +45,9 @@ class AlarmActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
+
+        // Apply theme immediately
+        ThemeHelper.applyThemeToActivity(this)
 
         val rvAlarms = findViewById<RecyclerView>(R.id.rvAlarms)
         val fabAddAlarm = findViewById<FloatingActionButton>(R.id.fabAddAlarm)
@@ -119,7 +125,7 @@ class AlarmActivity : AppCompatActivity() {
         timePicker.minute = alarm.minute
         etMessage.setText(alarm.message)
 
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this, R.style.TerminalDialogTheme)
             .setTitle(if (isNew) "Add Alarm" else "Edit Alarm")
             .setView(dialogView)
             .setPositiveButton("Save") { _, _ ->
@@ -137,7 +143,12 @@ class AlarmActivity : AppCompatActivity() {
                 sendAlarmToWatch(alarm)
             }
             .setNegativeButton("Cancel", null)
-            .show()
+            .create()
+            
+        dialog.show()
+        ThemeHelper.applyTheme(dialogView, activeThemeColor)
+        // Also apply theme to dialog window views
+        dialog.window?.decorView?.let { ThemeHelper.applyTheme(it, activeThemeColor) }
     }
 
     private fun sendAlarmToWatch(alarm: Alarm) {
@@ -161,7 +172,7 @@ class AlarmActivity : AppCompatActivity() {
 
             init {
                 view.setOnClickListener { 
-                    val pos = bindingAdapterPosition
+                    val pos = adapterPosition
                     if (pos != RecyclerView.NO_POSITION) {
                         onClick(list[pos])
                     }
@@ -179,6 +190,8 @@ class AlarmActivity : AppCompatActivity() {
             holder.tvTime.text = alarm.timeString
             holder.tvMessage.text = alarm.message
             
+            ThemeHelper.applyTheme(holder.itemView, activeThemeColor)
+
             holder.switchAlarm.setOnCheckedChangeListener(null)
             holder.switchAlarm.isChecked = alarm.isEnabled
             holder.switchAlarm.setOnCheckedChangeListener { _, isChecked ->

@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.divya.watchappnordic"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.divya.watchappnordic"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -44,7 +44,6 @@ dependencies {
     implementation("no.nordicsemi.android.support.v18:scanner:1.6.0")
     implementation("no.nordicsemi.android:ble:2.6.1")
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation(libs.core.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

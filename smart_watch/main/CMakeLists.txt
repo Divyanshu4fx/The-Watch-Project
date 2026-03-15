@@ -9,6 +9,7 @@ set(MAIN_SRCS
    "ui/ui_image_battery_icon.c"
    "ui/ui_image_bluetooth_ico.c"
    "ui/ui_image_alarm_icon.c"
+   "ui/ui_image_message_icon.c"
    "ui/ui_font_roboto.c"
    "battery/battery.c"
    "ble/ble.c"

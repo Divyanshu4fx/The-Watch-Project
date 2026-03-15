@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.Ringtone
 import android.media.RingtoneManager
@@ -28,6 +29,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import com.divya.watchappnordic.service.NotificationCatcherService
 import com.divya.watchappnordic.ui.NotificationSettingsActivity
+import com.divya.watchappnordic.util.ThemeHelper
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import no.nordicsemi.android.support.v18.scanner.*
@@ -43,6 +45,7 @@ class MainActivity : AppCompatActivity(), ConnectionObserver {
     private lateinit var btnSetAlarms: MaterialButton
     private lateinit var btnFindWatch: MaterialButton
     private lateinit var btnIrRemote: MaterialButton
+    private lateinit var btnThemeConfig: MaterialButton
     private lateinit var btnNotificationSettings: MaterialButton
     private lateinit var layoutConnectedFeatures: LinearLayout
     private lateinit var toolbar: MaterialToolbar
@@ -53,6 +56,7 @@ class MainActivity : AppCompatActivity(), ConnectionObserver {
     
     private var ringtone: Ringtone? = null
     private var findPhoneDialog: AlertDialog? = null
+    private var activeThemeColor: Int = 0
 
     companion object {
         var peripheral: MyBleManager? = null
@@ -61,6 +65,7 @@ class MainActivity : AppCompatActivity(), ConnectionObserver {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
+        activeThemeColor = ThemeHelper.getThemeColor(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
@@ -71,9 +76,13 @@ class MainActivity : AppCompatActivity(), ConnectionObserver {
         btnSetAlarms = findViewById(R.id.btnSetAlarms)
         btnFindWatch = findViewById(R.id.btnFindWatch)
         btnIrRemote = findViewById(R.id.btnIrRemote)
+        btnThemeConfig = findViewById(R.id.btnThemeConfig)
         btnNotificationSettings = findViewById(R.id.btnNotificationSettings)
         layoutConnectedFeatures = findViewById(R.id.layoutConnectedFeatures)
         toolbar = findViewById(R.id.toolbar)
+
+        // Apply theme immediately after loading views
+        ThemeHelper.applyThemeToActivity(this)
 
         btnScan.setOnClickListener {
             Log.d(TAG, "Scan button clicked")
@@ -100,6 +109,10 @@ class MainActivity : AppCompatActivity(), ConnectionObserver {
 
         btnIrRemote.setOnClickListener {
             startActivity(Intent(this, IrRemoteActivity::class.java))
+        }
+
+        btnThemeConfig.setOnClickListener {
+            startActivity(Intent(this, ThemeConfigActivity::class.java))
         }
 
         btnNotificationSettings.setOnClickListener {
@@ -133,6 +146,13 @@ class MainActivity : AppCompatActivity(), ConnectionObserver {
                 onDeviceConnected(it.bluetoothDevice!!)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Always apply the latest theme on resume
+        activeThemeColor = ThemeHelper.getThemeColor(this)
+        ThemeHelper.applyThemeToActivity(this)
     }
 
     private fun updateStatus(message: String) {
@@ -188,19 +208,24 @@ class MainActivity : AppCompatActivity(), ConnectionObserver {
             .setCancelable(false)
             .create()
         findPhoneDialog?.show()
+        // Apply theme to dialog
+        findPhoneDialog?.window?.decorView?.let { ThemeHelper.applyTheme(it, activeThemeColor) }
     }
 
     private fun showFindWatchDialog() {
         peripheral?.findMyWatch(true)
-        AlertDialog.Builder(this, R.style.TerminalDialogTheme)
+        val dialog = AlertDialog.Builder(this, R.style.TerminalDialogTheme)
             .setTitle("[UNIT_PING_INITIATED]")
             .setMessage("M5_WATCH SHOULD BE VIBRATING")
             .setCancelable(false)
-            .setPositiveButton("TERMINATE") { dialog, _ ->
+            .setPositiveButton("TERMINATE") { d, _ ->
                 peripheral?.findMyWatch(false)
-                dialog.dismiss()
+                d.dismiss()
             }
-            .show()
+            .create()
+        dialog.show()
+        // Apply theme to dialog
+        dialog.window?.decorView?.let { ThemeHelper.applyTheme(it, activeThemeColor) }
     }
 
     private fun hasPermission(): Boolean {
@@ -282,8 +307,7 @@ class MainActivity : AppCompatActivity(), ConnectionObserver {
 
     private fun setButtonInitialState() {
         btnScan.text = "INIT_SCAN"
-        btnScan.setTextColor(ContextCompat.getColor(this, R.color.terminal_green))
-        btnScan.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.terminal_green))
+        ThemeHelper.applyTheme(btnScan, activeThemeColor)
     }
 
     private fun setButtonDisconnectedState() {

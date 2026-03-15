@@ -24,6 +24,9 @@
 
 #include "clock.h"
 
+extern uint32_t current_theme_color;
+extern void apply_theme_color(uint32_t color_hex);
+
 // Starts Bluetooth and initializes it's Services
 void ble_init(void);
 
