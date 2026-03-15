@@ -47,6 +47,4 @@ idf.py build flash monitor
 4. Rebuild the ESP32 firmware.
 
 ## To-Do
-- [ ] Screen timeout and wake-on-button.
 - [ ] Wake-on-wrist-turn (using the MPU6886 IMU).
-- [ ] Display Android push notifications via BLE.
