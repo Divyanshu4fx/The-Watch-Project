@@ -67,6 +67,7 @@ sdkconfig.ci
 
 # Local configuration (SDK paths, NDK paths, etc.)
 local.properties
+m5Watch_App.jks
 
 # Compiled Android artifacts
 *.apk
