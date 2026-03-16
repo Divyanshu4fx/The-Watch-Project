@@ -206,6 +206,7 @@ void remove_notification(uint8_t index)
         notifications[i] = notifications[i + 1];
     }
     memset(&notifications[MAX_NOTIFICATIONS - 1], 0, sizeof(notification_t));
+    render_notification_list();
 }
 
 void clear_all_notifications(void)

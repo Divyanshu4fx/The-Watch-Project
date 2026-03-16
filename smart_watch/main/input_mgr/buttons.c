@@ -212,6 +212,17 @@ void input_event_callback(button_id_t btn_id, button_event_t event)
                 }
             }
         }
+        else if(event == BTN_EVENT_LONG_CLICK)
+        {
+            ESP_LOGI(TAG, "Button B long Clicked");
+            if (!(alarm_popup_enabled))
+            {
+                if (notification_screen_active)
+                {
+                   remove_notification(selected_index);
+                }
+            }
+        }
         break;
 
     case BTN_ID_C: // Left Side / Power Button

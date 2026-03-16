@@ -7,6 +7,11 @@ static uint8_t own_addr_type;
 static uint16_t ble_conn_handle = 0;
 static uint16_t find_phone_notify_handle = 0;
 
+// Reassembles notification payloads split across multiple BLE writes.
+static char notif_rx_buf[182] = {0};
+static uint16_t notif_rx_len = 0;
+static bool notif_rx_active = false;
+
 // extern myalarm_t alarms[MAX_ALARMS]; // defined in clock.c
 // extern uint16_t alarm_notify_handle;
 
@@ -205,66 +210,127 @@ static int notification_write_handler(uint16_t conn_handle,
                                       struct ble_gatt_access_ctxt *ctxt,
                                       void *arg)
 {
+    ESP_LOGI(TAG,"Notification Handler");
     if (ctxt->op != BLE_GATT_ACCESS_OP_WRITE_CHR)
         return 0;
 
-    uint8_t *data = ctxt->om->om_data;
-    uint16_t len = ctxt->om->om_len;
-
-    // Minimum: command byte + at least "a|b|c" = 6 bytes
-    if (len < 6)
+    uint16_t len = OS_MBUF_PKTLEN(ctxt->om);
+    ESP_LOGI(TAG, "Notif len=%d, active=%d, rxlen=%d", len, notif_rx_active, notif_rx_len);
+    if (len == 0)
     {
-        ESP_LOGW(TAG, "Notification packet too short: %d bytes", len);
+        ESP_LOGW(TAG, "Notification packet empty");
         return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
     }
 
-    // First byte is command: 0x01 = notification
-    uint8_t cmd = data[0];
-    if (cmd != 0x01)
+    uint8_t chunk[185] = {0};
+    if (len > sizeof(chunk))
     {
-        ESP_LOGW(TAG, "Unknown notification command: 0x%02x", cmd);
+        ESP_LOGW(TAG, "Notification chunk too large: %d bytes", len);
+        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+    }
+    os_mbuf_copydata(ctxt->om, 0, len, chunk);
+    ESP_LOGI(TAG, "Chunk[0]=0x%02x, data: %s", chunk[0], (char *)&chunk[1]);
+
+    uint16_t payload_start = 0;
+    if (chunk[0] == 0x01)
+    {
+        // Start of a new message.
+        notif_rx_len = 0;
+        notif_rx_active = true;
+        payload_start = 1;
+        ESP_LOGI(TAG, "New notif msg start");
+    }
+    else if (!notif_rx_active)
+    {
+        ESP_LOGW(TAG, "Unknown notification command: 0x%02x", chunk[0]);
         return 0;
     }
 
-    // Payload starts after command byte: "app_name|title|body"
-    char payload[182] = {0};
-    uint16_t payload_len = len - 1;
-    if (payload_len >= sizeof(payload))
-        payload_len = sizeof(payload) - 1;
-    memcpy(payload, &data[1], payload_len);
-    payload[payload_len] = '\0';
+    uint16_t append_len = len - payload_start;
+    bool saw_terminator = false;
+    ESP_LOGI(TAG, "append_len=%d, searching for terminator", append_len);
+    if (append_len > 0)
+    {
+        uint8_t *term = memchr(&chunk[payload_start], '\0', append_len);
+        if (term != NULL)
+        {
+            append_len = (uint16_t)(term - &chunk[payload_start]);
+            saw_terminator = true;
+            ESP_LOGI(TAG, "Found terminator, truncate to %d", append_len);
+        }
 
-    // Parse pipe-delimited fields
+        uint16_t room = (sizeof(notif_rx_buf) - 1) - notif_rx_len;
+        if (append_len > room)
+        {
+            append_len = room;
+        }
+        memcpy(&notif_rx_buf[notif_rx_len], &chunk[payload_start], append_len);
+        notif_rx_len += append_len;
+        notif_rx_buf[notif_rx_len] = '\0';
+        ESP_LOGI(TAG, "After append: rxlen=%d, buf=%s", notif_rx_len, notif_rx_buf);
+    }
+
+    // Check for complete message: 
+    // 1. Explicit NUL terminator (if Android was rebuilt), OR
+    // 2. We have both delimiters (valid app|title|body format), OR
+    // 3. Buffer is full
+    bool has_both_delimiters = false;
+    if (notif_rx_len >= 5)  // minimum: a|b|c
+    {
+        char *sep1 = strchr(notif_rx_buf, '|');
+        if (sep1 != NULL)
+        {
+            char *sep2 = strchr(sep1 + 1, '|');
+            has_both_delimiters = (sep2 != NULL);
+        }
+    }
+    bool complete_message = saw_terminator || has_both_delimiters || (notif_rx_len >= sizeof(notif_rx_buf) - 1);
+    ESP_LOGI(TAG, "complete=%d (terminator=%d, delims=%d, full=%d)", complete_message, saw_terminator, has_both_delimiters, notif_rx_len >= sizeof(notif_rx_buf) - 1);
+    if (!complete_message)
+    {
+        ESP_LOGI(TAG, "Not complete, waiting for more chunks");
+        return 0;
+    }
+
+    char payload[182] = {0};
+    memcpy(payload, notif_rx_buf, notif_rx_len);
+    payload[notif_rx_len] = '\0';
+    ESP_LOGI(TAG, "Parsing payload: %s", payload);
+
     char app_name[24] = {0};
     char title[32] = {0};
     char body[128] = {0};
 
-    char *saveptr = NULL;
-    char *token;
-
-    // App name
-    token = strtok_r(payload, "|", &saveptr);
-    if (token != NULL)
+    char *sep1 = strchr(payload, '|');
+    char *sep2 = NULL;
+    if (sep1 != NULL)
     {
-        strncpy(app_name, token, sizeof(app_name) - 1);
+        *sep1 = '\0';
+        sep2 = strchr(sep1 + 1, '|');
     }
 
-    // Title
-    token = strtok_r(NULL, "|", &saveptr);
-    if (token != NULL)
+    ESP_LOGI(TAG, "sep1=%p, sep2=%p", sep1, sep2);
+    if (sep1 == NULL || sep2 == NULL)
     {
-        strncpy(title, token, sizeof(title) - 1);
+        ESP_LOGW(TAG, "Invalid notification payload: %s", payload);
+        notif_rx_active = false;
+        notif_rx_len = 0;
+        notif_rx_buf[0] = '\0';
+        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
     }
 
-    // Body — take the rest (may contain '|' characters)
-    if (saveptr != NULL && *saveptr != '\0')
-    {
-        strncpy(body, saveptr, sizeof(body) - 1);
-    }
+    *sep2 = '\0';
+    strncpy(app_name, payload, sizeof(app_name) - 1);
+    strncpy(title, sep1 + 1, sizeof(title) - 1);
+    strncpy(body, sep2 + 1, sizeof(body) - 1);
 
-    ESP_LOGI(TAG, "Notification: [%s] %s — %s", app_name, title, body);
-
+    ESP_LOGI(TAG, "Parsed: app=[%s], title=[%s], body=[%s]", app_name, title, body);
+    ESP_LOGI(TAG, "Notification: [%s] %s - %s", app_name, title, body);
     on_ble_notification_received(app_name, title, body);
+
+    notif_rx_active = false;
+    notif_rx_len = 0;
+    notif_rx_buf[0] = '\0';
 
     return 0;
 }

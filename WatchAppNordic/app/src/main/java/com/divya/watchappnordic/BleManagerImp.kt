@@ -51,6 +51,12 @@ class MyBleManager(context: Context) : BleManager(context) {
     }
 
     override fun initialize() {
+        // Increase ATT MTU so notification payload usually fits in a single write.
+        requestMtu(247)
+            .with { _, mtu -> Log.d(tag, "MTU negotiated: $mtu") }
+            .fail { _, status -> Log.w(tag, "MTU request failed: $status") }
+            .enqueue()
+
         setNotificationCallback(alarmCharacteristic).with { _, data ->
             val bytes = data.value
             if (bytes != null && bytes.size >= 4) {
@@ -103,20 +109,72 @@ class MyBleManager(context: Context) : BleManager(context) {
         }
     }
 
+//    fun sendNotification(appName: String, title: String, body: String) {
+//        notificationCharacteristic?.let { char ->
+//            val payload = "$appName|$title|$body"
+//            val payloadBytes = payload.toByteArray(Charsets.UTF_8)
+//            val truncatedBytes = if (payloadBytes.size > 181) {
+//                payloadBytes.sliceArray(0 until 178) + "...".toByteArray()
+//            } else payloadBytes
+//
+//            val data = ByteArray(1 + truncatedBytes.size)
+//            data[0] = 0x01.toByte()
+//            System.arraycopy(truncatedBytes, 0, data, 1, truncatedBytes.size)
+//            writeCharacteristic(char, data, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE).enqueue()
+//        }
+//    }
+
     fun sendNotification(appName: String, title: String, body: String) {
         notificationCharacteristic?.let { char ->
-            val payload = "$appName|$title|$body"
-            val payloadBytes = payload.toByteArray(Charsets.UTF_8)
-            val truncatedBytes = if (payloadBytes.size > 181) {
-                payloadBytes.sliceArray(0 until 178) + "...".toByteArray()
-            } else payloadBytes
-            
-            val data = ByteArray(1 + truncatedBytes.size)
-            data[0] = 0x01.toByte()
-            System.arraycopy(truncatedBytes, 0, data, 1, truncatedBytes.size)
-            writeCharacteristic(char, data, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE).enqueue()
+                // Firmware limits: total payload bytes <= 181 (after cmd byte)
+                // Keep fixed caps so delimiters are always present.
+                val safeApp = truncateUtf8(
+                    appName.trim().ifEmpty { "APP" }.replace("|", "/").replace("\u0000", ""),
+                    23
+                )
+                val safeTitle = truncateUtf8(
+                    title.trim().ifEmpty { "TITLE" }.replace("|", "/").replace("\u0000", ""),
+                    31
+                )
+                // 23 + 1 + 31 + 1 + 125 = 181 max
+                val safeBody = truncateUtf8(
+                    body.trim().ifEmpty { "-" }.replace("\u0000", ""),
+                    125
+                )
+
+                val payload = "$safeApp|$safeTitle|$safeBody"
+                val payloadBytes = payload.toByteArray(Charsets.UTF_8)
+
+                // Guard for firmware minimum: cmd + "a|b|c" => >= 6 bytes total
+                if (payloadBytes.size < 5) return
+
+                // Add explicit NUL terminator for firmware-side reassembly completion.
+                val data = ByteArray(2 + payloadBytes.size)
+                data[0] = 0x01
+                System.arraycopy(payloadBytes, 0, data, 1, payloadBytes.size)
+                data[data.lastIndex] = 0x00
+
+                // Print/log outgoing payload and data
+                Log.d(tag, "sendNotification: payload='$payload' (len=${payloadBytes.size}), data=${data.joinToString(", ") { String.format("%02X", it) }}")
+
+                writeCharacteristic(char, data, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT).enqueue()
+        
         }
     }
+
+    private fun truncateUtf8(input: String, maxBytes: Int): String {
+        if (input.isEmpty()) return input
+        val out = StringBuilder()
+        var used = 0
+        for (ch in input) {
+            val b = ch.toString().toByteArray(Charsets.UTF_8).size
+            if (used + b > maxBytes) break
+            out.append(ch)
+            used += b
+        }
+        return out.toString()
+    }
+
 
     fun sendIrCommand(protocol: Int, hexCode: Long) {
         irCharacteristic?.let { char ->
